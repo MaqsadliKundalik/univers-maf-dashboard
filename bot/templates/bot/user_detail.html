@@ -142,7 +142,7 @@
     <div class="col-md-6">
         <div class="tg-card">
             <div class="tg-card-header"><div class="title"><i class="bi bi-arrow-up-right" style="color:#f44336"></i> Yuborilgan</div></div>
-            <table class="tg-table">
+            <div class="tg-table-wrap"><table class="tg-table">
                 <thead><tr><th>Kimga</th><th>Miqdor</th><th>Tur</th><th>Vaqt</th></tr></thead>
                 <tbody>
                     {% for t in transfers_sent %}
@@ -156,14 +156,14 @@
                     <tr><td colspan="4" style="text-align:center;color:#708499;padding:20px">Transfer yo'q</td></tr>
                     {% endfor %}
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
 
     <div class="col-md-6">
         <div class="tg-card">
             <div class="tg-card-header"><div class="title"><i class="bi bi-arrow-down-left" style="color:#4dbe68"></i> Qabul qilingan</div></div>
-            <table class="tg-table">
+            <div class="tg-table-wrap"><table class="tg-table">
                 <thead><tr><th>Kim dan</th><th>Miqdor</th><th>Tur</th><th>Vaqt</th></tr></thead>
                 <tbody>
                     {% for t in transfers_received %}
@@ -177,7 +177,7 @@
                     <tr><td colspan="4" style="text-align:center;color:#708499;padding:20px">Transfer yo'q</td></tr>
                     {% endfor %}
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
 
@@ -185,7 +185,7 @@
     <div class="col-12">
         <div class="tg-card">
             <div class="tg-card-header"><div class="title"><i class="bi bi-heart" style="color:#f44336"></i> Paralar</div></div>
-            <table class="tg-table">
+            <div class="tg-table-wrap"><table class="tg-table">
                 <thead><tr><th>Juftlik</th><th>Sana</th></tr></thead>
                 <tbody>
                     {% for p in pairs %}
@@ -199,7 +199,7 @@
                     </tr>
                     {% endfor %}
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
     {% endif %}
