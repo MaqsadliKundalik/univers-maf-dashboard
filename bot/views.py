@@ -2,9 +2,11 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Sum, Count, Q
 from django.core.paginator import Paginator
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat
 
 
+@login_required
 def dashboard(request):
     total_users = User.objects.count()
     total_vip = VipUser.objects.count()
@@ -27,6 +29,7 @@ def dashboard(request):
     return render(request, 'bot/dashboard.html', context)
 
 
+@login_required
 def users_list(request):
     query = request.GET.get('q', '')
     sort = request.GET.get('sort', '-id')
@@ -59,6 +62,7 @@ def users_list(request):
     return render(request, 'bot/users.html', {'users': users, 'query': query, 'sort': sort})
 
 
+@login_required
 def user_detail(request, user_id):
     user = get_object_or_404(User, id=user_id)
     profile = Profile.objects.filter(user=user).first()
@@ -80,6 +84,7 @@ def user_detail(request, user_id):
     return render(request, 'bot/user_detail.html', context)
 
 
+@login_required
 def transfers_list(request):
     type_filter = request.GET.get('type', '')
     transfers = Transfer.objects.select_related('from_user', 'to_user').order_by('-created_at')
@@ -94,11 +99,13 @@ def transfers_list(request):
     return render(request, 'bot/transfers.html', {'transfers': transfers, 'type_filter': type_filter})
 
 
+@login_required
 def vip_list(request):
     vips = VipUser.objects.select_related('user').order_by('-created_at')
     return render(request, 'bot/vip.html', {'vips': vips})
 
 
+@login_required
 def top_players(request):
     profiles = Profile.objects.select_related('user').order_by('-wins')
     paginator = Paginator(profiles, 50)
@@ -107,6 +114,7 @@ def top_players(request):
     return render(request, 'bot/top.html', {'profiles': profiles})
 
 
+@login_required
 def blocked_list(request):
     query = request.GET.get('q', '')
     blocked = BlockedUser.objects.select_related('user').order_by('-created_at')
@@ -125,6 +133,7 @@ def blocked_list(request):
     return render(request, 'bot/blocked.html', {'blocked': blocked, 'query': query})
 
 
+@login_required
 def block_user(request):
     if request.method == 'POST':
         user_id_input = request.POST.get('user_id', '').strip()
@@ -148,6 +157,7 @@ def block_user(request):
     return redirect('blocked')
 
 
+@login_required
 def unblock_user(request, blocked_id):
     if request.method == 'POST':
         blocked = get_object_or_404(BlockedUser, id=blocked_id)
@@ -157,6 +167,7 @@ def unblock_user(request, blocked_id):
     return redirect('blocked')
 
 
+@login_required
 def geroys_list(request):
     query = request.GET.get('q', '')
     level_filter = request.GET.get('level', '')
@@ -179,6 +190,7 @@ def geroys_list(request):
     return render(request, 'bot/geroys.html', {'geroys': geroys, 'query': query, 'level_filter': level_filter, 'levels': levels})
 
 
+@login_required
 def chats_list(request):
     query = request.GET.get('q', '')
     type_filter = request.GET.get('type', '')
