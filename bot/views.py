@@ -3,7 +3,7 @@ from django.db.models import Sum, Count, Q
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat
+from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway
 
 
 @login_required
@@ -188,6 +188,37 @@ def geroys_list(request):
 
     levels = Geroy.objects.values_list('level', flat=True).distinct().order_by('level')
     return render(request, 'bot/geroys.html', {'geroys': geroys, 'query': query, 'level_filter': level_filter, 'levels': levels})
+
+
+@login_required
+def giveaways_list(request):
+    query = request.GET.get('q', '')
+    sort = request.GET.get('sort', '-created_at')
+
+    sort_map = {
+        'total': 'total_amount',
+        '-total': '-total_amount',
+        'remaining': 'remaining_amount',
+        '-remaining': '-remaining_amount',
+        'date': 'created_at',
+        '-date': '-created_at',
+    }
+    order_by = sort_map.get(sort, '-created_at')
+
+    giveaways = Giveaway.objects.select_related('creator').order_by(order_by)
+
+    if query:
+        giveaways = giveaways.filter(
+            Q(creator__full_name__icontains=query) |
+            Q(creator__mention__icontains=query) |
+            Q(creator__user_id__icontains=query)
+        )
+
+    paginator = Paginator(giveaways, 50)
+    page = request.GET.get('page')
+    giveaways = paginator.get_page(page)
+
+    return render(request, 'bot/giveaways.html', {'giveaways': giveaways, 'query': query, 'sort': sort})
 
 
 @login_required

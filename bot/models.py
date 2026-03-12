@@ -162,6 +162,32 @@ class Geroy(models.Model):
         return min(100, int((self.ball - prev) / (needed - prev) * 100))
 
 
+class Giveaway(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    creator = models.ForeignKey(User, related_name="giveaways", on_delete=models.CASCADE)
+    chat_id = models.BigIntegerField()
+    message_id = models.BigIntegerField()
+    total_amount = models.BigIntegerField()
+    remaining_amount = models.BigIntegerField()
+    collected_users = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "giveaway"
+        managed = False
+
+    def __str__(self):
+        return f"Giveaway #{self.id} by {self.creator}"
+
+    @property
+    def distributed_amount(self):
+        return self.total_amount - self.remaining_amount
+
+    @property
+    def collected_count(self):
+        return len(self.collected_users) if self.collected_users else 0
+
+
 class Chat(models.Model):
     id = models.BigAutoField(primary_key=True)
     chat_id = models.BigIntegerField()

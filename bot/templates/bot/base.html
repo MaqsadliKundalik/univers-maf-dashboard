@@ -354,6 +354,11 @@
                 <i class="bi bi-chat-dots"></i> Chatlar
             </a>
         </div>
+        <div class="nav-item">
+            <a href="{% url 'giveaways' %}" class="nav-link {% if request.resolver_match.url_name == 'giveaways' %}active{% endif %}">
+                <i class="bi bi-gift"></i> Giveawaylar
+            </a>
+        </div>
     </div>
 
     <div style="margin-top:auto;padding:12px 8px 16px">

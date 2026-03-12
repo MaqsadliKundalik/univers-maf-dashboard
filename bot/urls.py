@@ -12,5 +12,6 @@ urlpatterns = [
     path('blocked/block/', views.block_user, name='block_user'),
     path('blocked/unblock/<int:blocked_id>/', views.unblock_user, name='unblock_user'),
     path('geroys/', views.geroys_list, name='geroys'),
+    path('giveaways/', views.giveaways_list, name='giveaways'),
     path('chats/', views.chats_list, name='chats'),
 ]
