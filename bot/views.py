@@ -3,12 +3,12 @@ from django.db.models import Sum, Count, Q, Subquery, OuterRef
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway
+from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase
 
 
 @login_required
 def dashboard(request):
-    total_users = User.objects.count()
+    total_users = User.objects.filter(profile__isnull=False).count()
     total_vip = VipUser.objects.count()
     total_blocked = BlockedUser.objects.count()
     total_transfers = Transfer.objects.count()
@@ -48,7 +48,7 @@ def users_list(request):
     }
     order_by = sort_map.get(sort, '-id')
 
-    users = User.objects.prefetch_related('profile').order_by(order_by)
+    users = User.objects.filter(profile__isnull=False).select_related('profile').order_by(order_by)
 
     if query:
         users = users.filter(
@@ -240,3 +240,78 @@ def chats_list(request):
     chats = paginator.get_page(page)
 
     return render(request, 'bot/chats.html', {'chats': chats, 'query': query, 'type_filter': type_filter})
+
+
+@login_required
+def active_games(request):
+    """1-bosqich: faol o'yini bor guruhlar ro'yxati"""
+    sort = request.GET.get('sort', '-players')
+
+    chat_ids = Game.objects.filter(is_active=True).values_list('chat_id', flat=True).distinct()
+    chats = Chat.objects.filter(id__in=chat_ids).annotate(
+        active_count=Count('games', filter=Q(games__is_active=True)),
+        total_players=Count('games__players', filter=Q(games__is_active=True)),
+    )
+
+    sort_map = {
+        'players': 'total_players',
+        '-players': '-total_players',
+        'games': 'active_count',
+        '-games': '-active_count',
+        'name': 'title',
+        '-name': '-title',
+    }
+    order_by = sort_map.get(sort, '-total_players')
+    chats = chats.order_by(order_by)
+
+    total_games = Game.objects.filter(is_active=True).count()
+
+    paginator = Paginator(chats, 30)
+    page = request.GET.get('page')
+    chats = paginator.get_page(page)
+
+    return render(request, 'bot/active_games.html', {
+        'chats': chats,
+        'total_games': total_games,
+        'sort': sort,
+    })
+
+
+@login_required
+def active_games_chat(request, chat_id):
+    """2-bosqich: guruhdagi faol o'yinlar tafsiloti bilan"""
+    chat = get_object_or_404(Chat, id=chat_id)
+    games = Game.objects.filter(chat=chat, is_active=True).select_related('creator').order_by('-created_at')
+
+    games_data = []
+    for game in games:
+        current_phase = game.phases.order_by('-number').first()
+        players = game.players.select_related('user').order_by('-is_alive', 'role')
+        games_data.append({
+            'game': game,
+            'current_phase': current_phase,
+            'players': players,
+            'alive_count': players.filter(is_alive=True).count(),
+            'dead_count': players.filter(is_alive=False).count(),
+        })
+
+    return render(request, 'bot/active_games_chat.html', {
+        'chat': chat,
+        'games_data': games_data,
+    })
+
+
+@login_required
+def active_game_detail(request, game_id):
+    """3-bosqich: o'yin tafsiloti — o'yinchilar"""
+    game = get_object_or_404(Game.objects.select_related('chat', 'creator'), id=game_id)
+    current_phase = game.phases.order_by('-number').first()
+    players = game.players.select_related('user').order_by('-is_alive', 'role')
+
+    return render(request, 'bot/active_game_detail.html', {
+        'game': game,
+        'current_phase': current_phase,
+        'players': players,
+        'alive_count': players.filter(is_alive=True).count(),
+        'dead_count': players.filter(is_alive=False).count(),
+    })

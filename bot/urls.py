@@ -14,4 +14,7 @@ urlpatterns = [
     path('geroys/', views.geroys_list, name='geroys'),
     path('giveaways/', views.giveaways_list, name='giveaways'),
     path('chats/', views.chats_list, name='chats'),
+    path('games/', views.active_games, name='active_games'),
+    path('games/chat/<int:chat_id>/', views.active_games_chat, name='active_games_chat'),
+    path('games/<int:game_id>/', views.active_game_detail, name='active_game_detail'),
 ]

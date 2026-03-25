@@ -1,0 +1,85 @@
+{% extends "bot/base.html" %}
+{% block title %}Faol O'yinlar — MafiaDash{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-controller me-2" style="color:#5288c1"></i>Faol O'yinlar</h1>
+    <p>Faol o'yinlar soni: <strong style="color:#f5f5f5">{{ total_games }}</strong></p>
+</div>
+
+<!-- Sort -->
+<div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+    <span style="color:#708499;font-size:0.85rem">Saralash:</span>
+    <div class="filter-tabs">
+        <a href="?sort=-players" class="filter-tab {% if sort == '-players' %}active{% endif %}">O'yinchilar ↓</a>
+        <a href="?sort=players" class="filter-tab {% if sort == 'players' %}active{% endif %}">O'yinchilar ↑</a>
+        <a href="?sort=-games" class="filter-tab {% if sort == '-games' %}active{% endif %}">O'yinlar ↓</a>
+        <a href="?sort=name" class="filter-tab {% if sort == 'name' %}active{% endif %}">Nomi A-Z</a>
+    </div>
+</div>
+
+{% if not chats.object_list %}
+<div class="tg-card" style="padding:40px;text-align:center">
+    <i class="bi bi-moon-stars" style="font-size:2.5rem;color:#708499"></i>
+    <p style="color:#708499;margin-top:12px;font-size:0.95rem">Hozirda faol o'yin yo'q</p>
+</div>
+{% else %}
+<div class="row g-3">
+    {% for chat in chats %}
+    <div class="col-md-6 col-lg-4">
+        <a href="{% url 'active_games_chat' chat.id %}" style="text-decoration:none">
+            <div class="stat-card" style="cursor:pointer">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="icon" style="background:rgba(82,136,193,0.15);color:#5288c1">
+                        <i class="bi bi-chat-dots-fill"></i>
+                    </div>
+                    <div style="min-width:0;flex:1">
+                        <div style="font-weight:600;color:#f5f5f5;font-size:0.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ chat.title }}</div>
+                        <div style="font-size:0.78rem;color:#708499">{{ chat.type }}</div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-4">
+                        <div>
+                            <span class="value" style="font-size:1.4rem;color:#5288c1">{{ chat.total_players }}</span>
+                            <span class="label"> o'yinchi</span>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right" style="color:#708499;font-size:1.2rem"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if chats.paginator.num_pages > 1 %}
+<div class="tg-pagination">
+    {% if chats.has_previous %}
+        <a href="?page={{ chats.previous_page_number }}&sort={{ sort }}" class="tg-page-btn">
+            <i class="bi bi-chevron-left"></i>
+        </a>
+    {% endif %}
+
+    {% for num in chats.paginator.page_range %}
+        {% if chats.number == num %}
+            <span class="tg-page-btn active">{{ num }}</span>
+        {% elif num > chats.number|add:"-3" and num < chats.number|add:"3" %}
+            <a href="?page={{ num }}&sort={{ sort }}" class="tg-page-btn">{{ num }}</a>
+        {% elif num == 1 or num == chats.paginator.num_pages %}
+            <a href="?page={{ num }}&sort={{ sort }}" class="tg-page-btn">{{ num }}</a>
+        {% elif num == chats.number|add:"-3" or num == chats.number|add:"3" %}
+            <span class="tg-page-btn" style="border:none;color:#708499">…</span>
+        {% endif %}
+    {% endfor %}
+
+    {% if chats.has_next %}
+        <a href="?page={{ chats.next_page_number }}&sort={{ sort }}" class="tg-page-btn">
+            <i class="bi bi-chevron-right"></i>
+        </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,152 @@
+{% extends "bot/base.html" %}
+{% block title %}O'yin #{{ game.id }} — MafiaDash{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-2 mb-1">
+        <a href="{% url 'active_games_chat' game.chat.id %}" class="tg-btn tg-btn-sm tg-btn-ghost">
+            <i class="bi bi-arrow-left"></i> {{ game.chat.title|truncatechars:25 }}
+        </a>
+    </div>
+    <div class="d-flex align-items-center gap-3 mt-2 flex-wrap">
+        <h1 style="margin:0">O'yin #{{ game.id }}</h1>
+        {% if game.phase == 'waiting' %}
+            <span class="tg-badge" style="background:#2a3a4a;color:#708499">
+                <i class="bi bi-hourglass-split"></i> Kutilmoqda
+            </span>
+        {% elif game.phase == 'night' %}
+            <span class="tg-badge" style="background:#1a1a3d;color:#8b8bfa">
+                <i class="bi bi-moon-fill"></i> Tun{% if current_phase %} #{{ current_phase.number }}{% endif %}
+            </span>
+        {% elif game.phase == 'day' %}
+            <span class="tg-badge" style="background:#3d3a1a;color:#f5d76e">
+                <i class="bi bi-sun-fill"></i> Kunduz{% if current_phase %} #{{ current_phase.number }}{% endif %}
+            </span>
+        {% else %}
+            <span class="tg-badge" style="background:#2a3a4a;color:#adb5bd">{{ game.phase }}</span>
+        {% endif %}
+        {% if game.mode != 'classic' %}
+            <span class="tg-badge" style="background:#3d2a0f;color:#f5a623">{{ game.mode }}</span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Statistika -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="icon" style="background:rgba(82,136,193,0.15);color:#5288c1">
+                <i class="bi bi-person-fill"></i>
+            </div>
+            <div class="value">{{ alive_count|add:dead_count }}</div>
+            <div class="label">Jami o'yinchilar</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="icon" style="background:rgba(77,190,104,0.15);color:#4dbe68">
+                <i class="bi bi-heart-fill"></i>
+            </div>
+            <div class="value">{{ alive_count }}</div>
+            <div class="label">Tirik</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="icon" style="background:rgba(244,67,54,0.15);color:#f44336">
+                <i class="bi bi-x-circle-fill"></i>
+            </div>
+            <div class="value">{{ dead_count }}</div>
+            <div class="label">O'lgan</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="icon" style="background:rgba(82,136,193,0.15);color:#5288c1">
+                <i class="bi bi-person"></i>
+            </div>
+            <div class="value" style="font-size:1rem;word-break:break-all">{{ game.creator.full_name|default:game.creator.user_id|striptags|truncatechars:15 }}</div>
+            <div class="label">Yaratuvchi</div>
+        </div>
+    </div>
+</div>
+
+<!-- O'yinchilar -->
+<div class="tg-card">
+    <div class="tg-card-header">
+        <div class="title"><i class="bi bi-people-fill"></i> O'yinchilar</div>
+    </div>
+    <div class="tg-table-wrap">
+        <table class="tg-table" style="min-width:500px">
+            <thead>
+                <tr>
+                    <th>O'yinchi</th>
+                    <th>Rol</th>
+                    <th>Holat</th>
+                    <th>Jon</th>
+                    <th>Jamoa</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in players %}
+                <tr style="{% if not p.is_alive %}opacity:0.5{% endif %}">
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar">{{ p.user.full_name|default:"?"|striptags|truncatechars:1 }}</div>
+                            <div>
+                                <div class="user-name" style="font-size:0.88rem">{{ p.user.full_name|default:p.user.user_id|striptags|truncatechars:18 }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span style="font-weight:600;color:#e0e0e0;font-size:0.85rem">{{ p.role }}</span>
+                    </td>
+                    <td>
+                        {% if p.is_alive %}
+                            <span style="color:#4dbe68;font-weight:600;font-size:0.82rem">
+                                <i class="bi bi-heart-fill"></i> Tirik
+                            </span>
+                        {% else %}
+                            <span style="color:#f44336;font-weight:600;font-size:0.82rem">
+                                <i class="bi bi-x-circle-fill"></i> O'lgan
+                            </span>
+                        {% endif %}
+                        {% if p.is_sleep %}
+                            <span class="tg-badge" style="background:#2a2a3a;color:#8b8bfa;font-size:0.72rem;margin-left:4px">
+                                <i class="bi bi-moon"></i> uxlayapti
+                            </span>
+                        {% endif %}
+                        {% if p.osildi %}
+                            <span class="tg-badge" style="background:#3d1212;color:#f44336;font-size:0.72rem;margin-left:4px">
+                                osildi
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:6px">
+                            <div style="width:50px;height:6px;background:#1c2631;border-radius:3px;overflow:hidden">
+                                <div style="width:{{ p.life }}%;height:100%;background:{% if p.life > 60 %}#4dbe68{% elif p.life > 30 %}#f5a623{% else %}#f44336{% endif %};border-radius:3px"></div>
+                            </div>
+                            <span style="font-size:0.78rem;color:#708499">{{ p.life }}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        {% if p.team %}
+                            {% if p.team == 'mafia' %}
+                                <span class="tg-badge" style="background:#3d1212;color:#f44336;font-size:0.78rem">mafia</span>
+                            {% elif p.team == 'citizen' %}
+                                <span class="tg-badge" style="background:#1a3d2a;color:#4dbe68;font-size:0.78rem">fuqaro</span>
+                            {% else %}
+                                <span class="tg-badge" style="background:#2a3a4a;color:#adb5bd;font-size:0.78rem">{{ p.team }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span style="color:#708499;font-size:0.8rem">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

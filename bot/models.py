@@ -188,6 +188,163 @@ class Giveaway(models.Model):
         return len(self.collected_users) if self.collected_users else 0
 
 
+class Game(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    chat = models.ForeignKey('Chat', related_name="games", on_delete=models.CASCADE)
+    creator = models.ForeignKey(User, related_name="created_games", on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    message_id = models.BigIntegerField()
+    phase = models.CharField(max_length=10, default="waiting")  # waiting / night / day / end
+    mode = models.CharField(max_length=20, default="classic")
+    bot_id = models.BigIntegerField(null=True)
+
+    class Meta:
+        db_table = "game"
+        managed = False
+
+    def __str__(self):
+        return f"Game #{self.id} ({self.phase})"
+
+
+class GamePlayer(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(User, related_name="game_players", on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, related_name="players", on_delete=models.CASCADE)
+    role = models.CharField(max_length=70)
+    is_alive = models.BooleanField(default=True)
+    joined_at = models.DateTimeField(auto_now=True)
+    deaded_at = models.DateTimeField(auto_now=True)
+    is_sayed_last_word = models.BooleanField(default=False)
+    can_heal_self = models.BooleanField(default=True)
+    can_protection_self = models.BooleanField(default=True)
+    can_document_self = models.BooleanField(default=True)
+    can_investigate_self = models.BooleanField(default=True)
+    can_osishdan_himoya = models.BooleanField(default=True)
+    can_osishdan_himoya_adv = models.BooleanField(default=True)
+    can_slip_himoya = models.BooleanField(default=True)
+    is_sleep = models.BooleanField(default=False)
+    is_osilmas = models.BooleanField(default=False)
+    osildi = models.BooleanField(default=False)
+    missed_nights = models.BigIntegerField(default=0)
+    should_choose_card = models.BooleanField(default=False)
+    is_really_winner = models.BooleanField(default=False)
+    last_visited_user_id = models.BigIntegerField(null=True)
+    maxsus_raqam = models.BigIntegerField(null=True)
+    win = models.BooleanField(default=False)
+    is_actioned = models.BooleanField(default=False)
+    life = models.IntegerField(default=100)
+    team = models.CharField(max_length=20, null=True)
+
+    class Meta:
+        db_table = "gameplayer"
+        managed = False
+
+    def __str__(self):
+        return f"{self.user} — {self.role}"
+
+
+class GamePhase(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    game = models.ForeignKey(Game, related_name="phases", on_delete=models.CASCADE)
+    phase_type = models.CharField(max_length=10)  # day / night
+    number = models.BigIntegerField()
+    started_at = models.DateTimeField(auto_now_add=True)
+    is_end = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "gamephase"
+        managed = False
+
+    def __str__(self):
+        return f"Phase {self.phase_type} #{self.number} (Game #{self.game_id})"
+
+
+class Vote(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    phase = models.ForeignKey(GamePhase, related_name="votes", on_delete=models.CASCADE)
+    voter = models.ForeignKey(GamePlayer, related_name="votes_given", on_delete=models.CASCADE)
+    target = models.ForeignKey(GamePlayer, related_name="votes_received", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "vote"
+        managed = False
+
+
+class Action(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    phase = models.ForeignKey(GamePhase, related_name="actions", on_delete=models.CASCADE)
+    actor = models.ForeignKey(GamePlayer, related_name="actions_made", on_delete=models.CASCADE)
+    target = models.ForeignKey(GamePlayer, related_name="actions_received", on_delete=models.CASCADE)
+    action_type = models.CharField(max_length=20)  # kill, heal, investigate
+    result = models.CharField(max_length=100, null=True)
+    with_miltiq = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "action"
+        managed = False
+
+
+class PlayersGameBall(models.Model):
+    player = models.ForeignKey(GamePlayer, related_name="player_game_ball", on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, related_name="players_ball", on_delete=models.CASCADE)
+    ball = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "playersgameball"
+        managed = False
+
+
+class GazabdorPick(models.Model):
+    actor = models.ForeignKey(GamePlayer, related_name="gazabdor_actions", on_delete=models.CASCADE)
+    target = models.ForeignKey(GamePlayer, related_name="gazabdor_targets_back", on_delete=models.CASCADE)
+    phase = models.ForeignKey(GamePhase, related_name="gazabdor_picks", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "gazabdorpick"
+        managed = False
+        unique_together = (("actor", "target", "phase"),)
+
+
+class VoteLike(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    phase = models.ForeignKey(GamePhase, related_name="vote_likes", on_delete=models.CASCADE)
+    target = models.ForeignKey(GamePlayer, related_name="vote_target_likes", on_delete=models.CASCADE)
+    voter = models.ForeignKey(GamePlayer, related_name="voted_likes", on_delete=models.CASCADE)
+    is_like = models.BooleanField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "votelike"
+        managed = False
+
+
+class GiveTopChat(models.Model):
+    chat = models.ForeignKey('Chat', related_name="givetops", on_delete=models.CASCADE)
+    gived_at = models.DateTimeField(auto_now_add=True)
+    give_type = models.CharField(max_length=3)  # 1, 7, 30, 365
+
+    class Meta:
+        db_table = "givetopchat"
+        managed = False
+
+
+class GeroyAction(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    geroy = models.ForeignKey(Geroy, related_name="actions", on_delete=models.CASCADE)
+    action_type = models.CharField(max_length=20)  # attack, shield, skip
+    target_user = models.ForeignKey(User, related_name="geroy_actions", on_delete=models.CASCADE, null=True, blank=True)
+    phase = models.ForeignKey(GamePhase, related_name="geroy_actions", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "geroyaction"
+        managed = False
+
+
 class Chat(models.Model):
     id = models.BigAutoField(primary_key=True)
     chat_id = models.BigIntegerField()
