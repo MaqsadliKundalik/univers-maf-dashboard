@@ -1,0 +1,253 @@
+{% extends "bot/base.html" %}
+{% block title %}Savdo Analitikasi — MafiaDash{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-graph-up me-2" style="color:#4dbe68"></i>Savdo Analitikasi</h1>
+    <p>Transfer narxlari va Stars sotuvlari hisoboti</p>
+</div>
+
+<!-- So'mdagi savdolar -->
+<h6 style="color:#708499;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">
+    <i class="bi bi-cash-stack me-1"></i> Savdo (so'mda)
+</h6>
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="icon" style="background:rgba(77,190,104,0.15);color:#4dbe68">
+                <i class="bi bi-calendar-week"></i>
+            </div>
+            <div class="value">{{ week.total|floatformat:0 }}</div>
+            <div class="label">Bu hafta ({{ week.count }} ta savdo)</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="icon" style="background:rgba(82,136,193,0.15);color:#5288c1">
+                <i class="bi bi-calendar-month"></i>
+            </div>
+            <div class="value">{{ month.total|floatformat:0 }}</div>
+            <div class="label">Bu oy ({{ month.count }} ta savdo)</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="icon" style="background:rgba(245,166,35,0.15);color:#f5a623">
+                <i class="bi bi-calendar"></i>
+            </div>
+            <div class="value">{{ year.total|floatformat:0 }}</div>
+            <div class="label">Bu yil ({{ year.count }} ta savdo)</div>
+        </div>
+    </div>
+</div>
+
+<!-- Stars sotuvlari -->
+<h6 style="color:#708499;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">
+    <i class="bi bi-star-fill me-1" style="color:#ffd700"></i> Stars orqali sotuvlar
+</h6>
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="icon" style="background:rgba(255,215,0,0.15);color:#ffd700">
+                <i class="bi bi-calendar-week"></i>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div>
+                    <div class="value" style="font-size:1.4rem">{{ stars_week.total_stars|default:0 }} ⭐</div>
+                    <div class="label">{{ stars_week.total_diamonds|default:0 }} 💎 · {{ stars_week.count|default:0 }} ta</div>
+                </div>
+            </div>
+            <div class="label mt-1">Bu hafta</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="icon" style="background:rgba(255,215,0,0.15);color:#ffd700">
+                <i class="bi bi-calendar-month"></i>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div>
+                    <div class="value" style="font-size:1.4rem">{{ stars_month.total_stars|default:0 }} ⭐</div>
+                    <div class="label">{{ stars_month.total_diamonds|default:0 }} 💎 · {{ stars_month.count|default:0 }} ta</div>
+                </div>
+            </div>
+            <div class="label mt-1">Bu oy</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="icon" style="background:rgba(255,215,0,0.15);color:#ffd700">
+                <i class="bi bi-calendar"></i>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div>
+                    <div class="value" style="font-size:1.4rem">{{ stars_year.total_stars|default:0 }} ⭐</div>
+                    <div class="label">{{ stars_year.total_diamonds|default:0 }} 💎 · {{ stars_year.count|default:0 }} ta</div>
+                </div>
+            </div>
+            <div class="label mt-1">Bu yil</div>
+        </div>
+    </div>
+</div>
+
+<!-- Tablar -->
+<div class="d-flex align-items-center gap-2 mb-3">
+    <div class="filter-tabs">
+        <a href="?tab=sales" class="filter-tab {% if tab == 'sales' %}active{% endif %}">💰 Savdolar</a>
+        <a href="?tab=stars" class="filter-tab {% if tab == 'stars' %}active{% endif %}">⭐ Stars</a>
+    </div>
+</div>
+
+{% if tab == 'stars' %}
+<!-- Stars jadvali -->
+<div class="tg-card">
+    <div class="tg-card-header">
+        <div class="title"><i class="bi bi-star-fill me-2" style="color:#ffd700"></i>Stars Sotuvlari</div>
+    </div>
+    <div class="tg-table-wrap">
+        <table class="tg-table">
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>💎 Olmos</th>
+                    <th>⭐ Stars</th>
+                    <th>Sana</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td><code>{{ item.user_id }}</code></td>
+                    <td><span class="tg-badge tg-badge-diamond">💎 {{ item.amount }}</span></td>
+                    <td style="font-weight:600;color:#ffd700">⭐ {{ item.stars }}</td>
+                    <td style="color:#708499;font-size:0.82rem">{{ item.created_at|date:"d.m.Y H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" style="text-align:center;color:#708499;padding:30px">Ma'lumot yo'q</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% else %}
+<!-- Savdolar jadvali -->
+<div class="tg-card">
+    <div class="tg-card-header">
+        <div class="title"><i class="bi bi-receipt me-2" style="color:#4dbe68"></i>Savdolar (narxi aniqlangan transferlar)</div>
+    </div>
+    <div class="tg-table-wrap">
+        <table class="tg-table">
+            <thead>
+                <tr>
+                    <th>Kimdan</th>
+                    <th>Kimga</th>
+                    <th>Miqdor</th>
+                    <th>Caption</th>
+                    <th>Narx (so'm)</th>
+                    <th>Sana</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tp in items %}
+                <tr>
+                    <td>
+                        <a href="{% url 'user_detail' tp.transfer.from_user.id %}" style="color:#f5f5f5">
+                            {{ tp.transfer.from_user.full_name|striptags|truncatechars:15|default:tp.transfer.from_user.user_id }}
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{% url 'user_detail' tp.transfer.to_user.id %}" style="color:#f5f5f5">
+                            {{ tp.transfer.to_user.full_name|striptags|truncatechars:15|default:tp.transfer.to_user.user_id }}
+                        </a>
+                    </td>
+                    <td>
+                        {% if tp.transfer.type == 'diamond' %}
+                            <span class="tg-badge tg-badge-diamond">💎 {{ tp.transfer.amount }}</span>
+                        {% else %}
+                            <span class="tg-badge tg-badge-dollar">💵 {{ tp.transfer.amount }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:0.82rem;color:#adb5bd;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ tp.transfer.caption }}">
+                        {{ tp.transfer.caption|truncatechars:30 }}
+                    </td>
+                    <td>
+                        <span style="font-weight:700;color:#4dbe68">{{ tp.price|floatformat:0 }}</span>
+                        {% if tp.is_manual %}
+                            <span style="font-size:0.7rem;color:#f5a623;margin-left:4px" title="Qo'lda tahrirlangan">✏️</span>
+                        {% endif %}
+                    </td>
+                    <td style="color:#708499;font-size:0.82rem;white-space:nowrap">{{ tp.transfer.created_at|date:"d.m.Y H:i" }}</td>
+                    <td>
+                        <button class="tg-btn tg-btn-sm tg-btn-ghost" onclick="editPrice({{ tp.id }}, {{ tp.price }})" title="Narxni tahrirlash">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="text-align:center;color:#708499;padding:30px">Narxi aniqlangan savdo yo'q</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Pagination -->
+{% if items.paginator.num_pages > 1 %}
+<div class="tg-pagination">
+    {% if items.has_previous %}
+        <a href="?tab={{ tab }}&page={{ items.previous_page_number }}" class="tg-page-btn"><i class="bi bi-chevron-left"></i></a>
+    {% endif %}
+    {% for num in items.paginator.page_range %}
+        {% if items.number == num %}
+            <span class="tg-page-btn active">{{ num }}</span>
+        {% elif num > items.number|add:"-3" and num < items.number|add:"3" %}
+            <a href="?tab={{ tab }}&page={{ num }}" class="tg-page-btn">{{ num }}</a>
+        {% elif num == 1 or num == items.paginator.num_pages %}
+            <a href="?tab={{ tab }}&page={{ num }}" class="tg-page-btn">{{ num }}</a>
+        {% elif num == items.number|add:"-3" or num == items.number|add:"3" %}
+            <span class="tg-page-btn" style="border:none;color:#708499">…</span>
+        {% endif %}
+    {% endfor %}
+    {% if items.has_next %}
+        <a href="?tab={{ tab }}&page={{ items.next_page_number }}" class="tg-page-btn"><i class="bi bi-chevron-right"></i></a>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Edit modal -->
+<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center">
+    <div style="background:#232e3c;border:1px solid #1c2733;border-radius:14px;padding:24px;width:340px;max-width:90vw">
+        <h6 style="color:#f5f5f5;margin:0 0 16px">Narxni tahrirlash</h6>
+        <form id="editForm" method="post">
+            {% csrf_token %}
+            <input type="text" name="price" id="editPriceInput" class="tg-search" placeholder="Yangi narx (so'mda)" style="margin-bottom:12px">
+            <div class="d-flex gap-2">
+                <button type="submit" class="tg-btn" style="flex:1">Saqlash</button>
+                <button type="button" class="tg-btn tg-btn-ghost" onclick="closeEditModal()" style="flex:1">Bekor</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function editPrice(priceId, currentPrice) {
+    const modal = document.getElementById('editModal');
+    const form = document.getElementById('editForm');
+    const input = document.getElementById('editPriceInput');
+    form.action = '/sales/edit/' + priceId + '/';
+    input.value = currentPrice;
+    modal.style.display = 'flex';
+    input.focus();
+    input.select();
+}
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEditModal();
+});
+</script>
+{% endblock %}

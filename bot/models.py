@@ -81,6 +81,7 @@ class Transfer(models.Model):
     to_user = models.ForeignKey(User, related_name="transfers_to", on_delete=models.CASCADE)
     amount = models.BigIntegerField()
     type = models.CharField(max_length=50)  # "diamond", "dollar"
+    caption = models.CharField(max_length=100, default="", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -89,6 +90,35 @@ class Transfer(models.Model):
 
     def __str__(self):
         return f"{self.from_user} → {self.to_user}: {self.amount} {self.type}"
+
+
+class DiamondBuyStars(models.Model):
+    user_id = models.BigIntegerField(unique=True)
+    amount = models.IntegerField()
+    stars = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "diamondbuystars"
+        managed = False
+
+    def __str__(self):
+        return f"User {self.user_id}: {self.amount} 💎 = {self.stars} ⭐"
+
+
+class TransferPrice(models.Model):
+    """Transferdagi savdo narxini keshlaydigan model (managed=True — Django boshqaradi)"""
+    transfer = models.OneToOneField(Transfer, related_name="cached_price", on_delete=models.CASCADE)
+    price = models.BigIntegerField()  # so'mdagi narx
+    is_manual = models.BooleanField(default=False)  # qo'lda tahrirlangan
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "transfer_price"
+
+    def __str__(self):
+        return f"Transfer #{self.transfer_id}: {self.price:,} so'm"
 
 
 class VipUser(models.Model):

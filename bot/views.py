@@ -1,9 +1,14 @@
+from datetime import timedelta
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Sum, Count, Q, Subquery, OuterRef
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase
+from django.utils import timezone
+
+from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice
+from .utils import parse_price_from_caption
 
 
 @login_required
@@ -315,3 +320,97 @@ def active_game_detail(request, game_id):
         'alive_count': players.filter(is_alive=True).count(),
         'dead_count': players.filter(is_alive=False).count(),
     })
+
+
+def _ensure_prices_cached(transfers_qs):
+    """Caption'dan narxlarni parse qilib TransferPrice'ga saqlaydi (keshlanmaganlarni)."""
+    cached_ids = set(TransferPrice.objects.filter(
+        transfer__in=transfers_qs
+    ).values_list('transfer_id', flat=True))
+
+    to_create = []
+    for t in transfers_qs.exclude(id__in=cached_ids).exclude(caption=''):
+        price = parse_price_from_caption(t.caption)
+        if price:
+            to_create.append(TransferPrice(transfer=t, price=price))
+
+    if to_create:
+        TransferPrice.objects.bulk_create(to_create, ignore_conflicts=True)
+
+
+def _sales_stats(period_start):
+    """Berilgan sanadan boshlab savdo statistikasini qaytaradi."""
+    qs = TransferPrice.objects.filter(transfer__created_at__gte=period_start)
+    agg = qs.aggregate(total=Sum('price'), count=Count('id'))
+    return {
+        'total': agg['total'] or 0,
+        'count': agg['count'] or 0,
+    }
+
+
+@login_required
+def sales_analytics(request):
+    """Savdo analitikasi: haftalik, oylik, yillik hisobotlar."""
+    now = timezone.now()
+    week_start = now - timedelta(days=now.weekday())
+    week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    # captionli transferlarni keshla
+    captioned = Transfer.objects.exclude(caption='').exclude(caption__isnull=True)
+    _ensure_prices_cached(captioned)
+
+    # Stars statistikasi
+    stars_week = DiamondBuyStars.objects.filter(created_at__gte=week_start).aggregate(
+        total_stars=Sum('stars'), total_diamonds=Sum('amount'), count=Count('id')
+    )
+    stars_month = DiamondBuyStars.objects.filter(created_at__gte=month_start).aggregate(
+        total_stars=Sum('stars'), total_diamonds=Sum('amount'), count=Count('id')
+    )
+    stars_year = DiamondBuyStars.objects.filter(created_at__gte=year_start).aggregate(
+        total_stars=Sum('stars'), total_diamonds=Sum('amount'), count=Count('id')
+    )
+
+    # So'nggi savdolar listi (narxi bor transferlar)
+    tab = request.GET.get('tab', 'sales')
+    page_num = request.GET.get('page')
+
+    if tab == 'stars':
+        items = DiamondBuyStars.objects.order_by('-created_at')
+        paginator = Paginator(items, 50)
+        items = paginator.get_page(page_num)
+    else:
+        items = TransferPrice.objects.select_related(
+            'transfer', 'transfer__from_user', 'transfer__to_user'
+        ).order_by('-transfer__created_at')
+        paginator = Paginator(items, 50)
+        items = paginator.get_page(page_num)
+
+    context = {
+        'week': _sales_stats(week_start),
+        'month': _sales_stats(month_start),
+        'year': _sales_stats(year_start),
+        'stars_week': stars_week,
+        'stars_month': stars_month,
+        'stars_year': stars_year,
+        'items': items,
+        'tab': tab,
+    }
+    return render(request, 'bot/sales.html', context)
+
+
+@login_required
+def edit_transfer_price(request, price_id):
+    """Keshlanagan narxni qo'lda tahrirlash."""
+    tp = get_object_or_404(TransferPrice, id=price_id)
+    if request.method == 'POST':
+        new_price = request.POST.get('price', '').replace(' ', '').replace(',', '')
+        if new_price.isdigit() and int(new_price) > 0:
+            tp.price = int(new_price)
+            tp.is_manual = True
+            tp.save()
+            messages.success(request, f"Narx {tp.price:,} so'mga o'zgartirildi.")
+        else:
+            messages.error(request, "Noto'g'ri narx kiritildi.")
+    return redirect('sales')
