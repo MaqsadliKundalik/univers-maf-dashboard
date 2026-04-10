@@ -8,7 +8,6 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 
 from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice
-from .utils import parse_price_from_caption
 
 
 @login_required
@@ -322,22 +321,6 @@ def active_game_detail(request, game_id):
     })
 
 
-def _ensure_prices_cached(transfers_qs):
-    """Caption'dan narxlarni parse qilib TransferPrice'ga saqlaydi (keshlanmaganlarni)."""
-    cached_ids = set(TransferPrice.objects.filter(
-        transfer__in=transfers_qs
-    ).values_list('transfer_id', flat=True))
-
-    to_create = []
-    for t in transfers_qs.exclude(id__in=cached_ids).exclude(caption=''):
-        price = parse_price_from_caption(t.caption)
-        if price:
-            to_create.append(TransferPrice(transfer=t, price=price))
-
-    if to_create:
-        TransferPrice.objects.bulk_create(to_create, ignore_conflicts=True)
-
-
 def _sales_stats(period_start):
     """Berilgan sanadan boshlab savdo statistikasini qaytaradi."""
     qs = TransferPrice.objects.filter(transfer__created_at__gte=period_start)
@@ -356,10 +339,6 @@ def sales_analytics(request):
     week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-
-    # captionli transferlarni keshla
-    captioned = Transfer.objects.exclude(caption='').exclude(caption__isnull=True)
-    _ensure_prices_cached(captioned)
 
     # Stars statistikasi
     stars_week = DiamondBuyStars.objects.filter(created_at__gte=week_start).aggregate(

@@ -81,7 +81,6 @@ class Transfer(models.Model):
     to_user = models.ForeignKey(User, related_name="transfers_to", on_delete=models.CASCADE)
     amount = models.BigIntegerField()
     type = models.CharField(max_length=50)  # "diamond", "dollar"
-    caption = models.CharField(max_length=100, default="", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
