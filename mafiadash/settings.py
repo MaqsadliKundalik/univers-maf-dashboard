@@ -71,8 +71,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_NAME', 'mafia_db'),
         'USER': os.environ.get('DB_USER', 'gen_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'Odi@1234'),
-        'HOST': os.environ.get('DB_HOST', '1ee1e75ce6c812673a1b7a7a.twc1.net'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', '1'),
+        'HOST': os.environ.get('DB_HOST', ''),
         'PORT': os.environ.get('DB_PORT', '5432'),
         'OPTIONS': {
             'sslmode': 'require',          # SSL ishlatilsin
