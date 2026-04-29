@@ -388,3 +388,17 @@ class Chat(models.Model):
 
     def __str__(self):
         return self.title
+
+class VipChats(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    chat_id = models.BigIntegerField(unique=True)
+    is_active = models.BooleanField(default=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "vipchats"
+        managed = False
+
+    def __str__(self):
+        return f"VIP Chat: {self.chat_id}"

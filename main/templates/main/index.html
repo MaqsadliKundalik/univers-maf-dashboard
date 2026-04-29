@@ -3,15 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Univers Mafia - Asosiy Sahifa</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>Univers Mafia - Premium</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0f172a;
-            --text-color: #f8fafc;
-            --primary-color: #3b82f6;
-            --primary-hover: #2563eb;
-            --accent-color: #10b981;
+            --bg-dark: #050505;
+            --bg-page: radial-gradient(circle at center, #0a1f12 0%, #000905 100%);
+            --gold: #d4af37;
+            --gold-dim: #997b2f;
+            --gold-light: #f3e5ab;
+            --gold-glow: 0 0 15px rgba(212, 175, 55, 0.3);
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: 1px solid rgba(212, 175, 55, 0.2);
+            --glass-effect: blur(10px);
         }
 
         * {
@@ -21,24 +29,32 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: 'Montserrat', sans-serif;
+            background: var(--bg-page);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
+            line-height: 1.6;
+            font-size: 14px;
         }
 
-        /* Subtle background glow effect */
-        .bg-glow {
+        /* Scrollbar styles */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: #000; }
+
+        /* Subtle ambient glow behind content */
+        .ambient-glow {
             position: absolute;
-            top: -20%;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            width: 80vw;
-            height: 80vw;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(15, 23, 42, 0) 70%);
+            transform: translate(-50%, -50%);
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.05) 0%, transparent 60%);
             z-index: -1;
             pointer-events: none;
         }
@@ -48,15 +64,20 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
+            border-bottom: var(--card-border);
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-effect);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .logo {
             font-weight: 800;
             font-size: 1.5rem;
-            letter-spacing: -0.05em;
-            color: var(--text-color);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-main);
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -64,36 +85,69 @@
         }
 
         .logo span {
-            color: var(--primary-color);
+            color: var(--gold);
+            text-shadow: var(--gold-glow);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
         }
 
         .nav-links a {
-            color: rgba(248, 250, 252, 0.8);
+            color: var(--text-muted);
             text-decoration: none;
-            margin-left: 2rem;
             font-weight: 600;
-            transition: color 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
         }
 
         .nav-links a:hover {
-            color: var(--text-color);
+            color: var(--gold-light);
+            text-shadow: var(--gold-glow);
         }
 
         .btn {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 9999px;
+            display: inline-block;
+            padding: 0.85rem 2rem;
             text-decoration: none;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+            position: relative;
+            overflow: hidden;
         }
 
-        .btn:hover {
-            background-color: var(--primary-hover);
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+        }
+
+        .btn-gold:hover {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.23);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            border-radius: 4px;
+        }
+
+        .btn-outline:hover {
+            background: rgba(212, 175, 55, 0.1);
+            box-shadow: var(--gold-glow);
+            transform: translateY(-2px);
         }
 
         main {
@@ -103,70 +157,255 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 4rem 2rem;
+            padding: 5rem 2rem;
             z-index: 1;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border: var(--card-border);
+            border-radius: 50px;
+            color: var(--gold);
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-effect);
         }
 
         h1 {
-            font-size: 4.5rem;
+            font-size: 4rem;
             font-weight: 800;
-            line-height: 1.1;
+            line-height: 1.2;
             margin-bottom: 1.5rem;
-            letter-spacing: -0.02em;
-            background: linear-gradient(to right, #f8fafc, #94a3b8);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            background: linear-gradient(to bottom, var(--gold-light), var(--gold), var(--gold-dim));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            max-width: 800px;
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.1);
+            max-width: 900px;
         }
 
         p.subtitle {
-            font-size: 1.25rem;
-            color: #94a3b8;
-            max-width: 600px;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 650px;
             margin-bottom: 3rem;
-            line-height: 1.6;
+            line-height: 1.8;
+            font-weight: 300;
         }
 
         .actions {
             display: flex;
-            gap: 1rem;
+            gap: 1.5rem;
         }
 
-        .btn-outline {
-            background-color: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: var(--text-color);
-            box-shadow: none;
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 6rem;
+            max-width: 1000px;
+            width: 100%;
         }
 
-        .btn-outline:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.4);
-            transform: translateY(-2px);
+        .feature-card {
+            background: var(--card-bg);
+            border: var(--card-border);
+            backdrop-filter: var(--glass-effect);
+            padding: 2.5rem 2rem;
+            border-radius: 8px;
+            text-align: left;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(212, 175, 55, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(212, 175, 55, 0.05);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            color: var(--gold);
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-card h3 {
+            color: var(--text-main);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        @media (max-width: 992px) {
+            .features-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .vip-section {
+            margin-top: 8rem;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .vip-section h2 {
+            font-size: 2.5rem;
+            color: var(--text-main);
+            margin-bottom: 3rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .vip-section h2 span {
+            color: var(--gold);
+            text-shadow: var(--gold-glow);
+        }
+
+        .vip-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .vip-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.2));
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            backdrop-filter: var(--glass-effect);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vip-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            opacity: 0.5;
+        }
+
+        .vip-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(212, 175, 55, 0.4);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(212, 175, 55, 0.1);
+        }
+
+        .vip-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4));
+        }
+
+        .vip-card h3 {
+            color: var(--text-main);
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.8rem;
+        }
+
+        .status-private {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        
+        .empty-state {
+            color: var(--text-muted);
+            font-style: italic;
+            grid-column: 1 / -1;
         }
 
         @media (max-width: 768px) {
-            h1 { font-size: 3rem; }
-            nav { padding: 1.5rem; }
+            h1 { font-size: 2.5rem; }
+            nav { padding: 1rem; flex-direction: column; gap: 1rem; }
+            .features-grid { grid-template-columns: 1fr; }
+            .actions { flex-direction: column; width: 100%; max-width: 300px; }
+            .btn { width: 100%; text-align: center; }
+            .vip-section { margin-top: 5rem; }
+            .vip-section h2 { font-size: 2rem; }
         }
     </style>
 </head>
 <body>
-    <div class="bg-glow"></div>
+    <div class="ambient-glow"></div>
     
     <nav>
         <a href="/" class="logo">Univers<span>Mafia</span></a>
         <div class="nav-links">
-            <a href="/panel/" class="btn btn-outline">Boshqaruv Paneli</a>
+            <a href="#">Xizmatlar</a>
+            <a href="#">Qoidalar</a>
+            <a href="/panel/" class="btn btn-outline" style="padding: 0.5rem 1.5rem; margin-left: 1rem;">Boshqaruv Paneli</a>
         </div>
     </nav>
 
     <main>
-        <h1>Univers Mafia loyihasiga xush kelibsiz!</h1>
-        <p class="subtitle">Bu yerda tez orada foydalanuvchilar uchun mo'ljallangan yangi sahifalar va xizmatlar paydo bo'ladi. Hozircha siz boshqaruv paneliga o'tishingiz mumkin.</p>
+        <div class="hero-badge">Yangi Premium Avlod</div>
+        <h1>Haqiqiy Mafiya Tajribasiga Xush Kelibsiz</h1>
+        <p class="subtitle">O'zingizni professional o'yinlar olamida sinab ko'ring. Univers Mafia bilan chegaralarni kengaytiring va shaxsiy statistikangizni boshqaring.</p>
+        
         <div class="actions">
-            <a href="/panel/" class="btn">Panelga o'tish</a>
+            <a href="/panel/" class="btn btn-gold">Hozir Boshlash</a>
+            <a href="#" class="btn btn-outline">Batafsil Ma'lumot</a>
         </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">✦</div>
+                <h3>Premium Status</h3>
+                <p>Kengaytirilgan imkoniyatlar va eksklyuziv xizmatlardan foydalanish uchun VIP darajaga kiring.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">♕</div>
+                <h3>Reyting Tizimi</h3>
+                <p>Eng yaxshilar ro'yxatida o'z o'rningizni toping. Professional o'yinchilar bilan bellashing.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛡</div>
+                <h3>To'liq Nazorat</h3>
+                <p>O'yinlaringizni, yutuqlaringizni va moliyaviy amaliyotlaringizni bitta panel orqali kuzating.</p>
+            </div>
+        </div>
+
+        <section class="vip-section">
+            <h2>Bizning <span>VIP Guruhlar</span></h2>
+            <div class="vip-grid">
+                {% for chat in vip_chats %}
+                <div class="vip-card">
+                    <div class="vip-icon">💎</div>
+                    <h3>{{ chat.title }}</h3>
+                    {% if chat.invite_link %}
+                    <a href="{{ chat.invite_link }}" target="_blank" class="btn btn-outline btn-sm">Qo'shilish</a>
+                    {% else %}
+                    <span class="status-private">Yopiq guruh</span>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="empty-state">Hozircha VIP guruhlar ro'yxati bo'sh.</p>
+                {% endfor %}
+            </div>
+        </section>
     </main>
 </body>
 </html>
