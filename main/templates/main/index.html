@@ -306,6 +306,7 @@
 
         .vip-icon {
             font-size: 2.5rem;
+            color: var(--gold);
             margin-bottom: 1rem;
             filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4));
         }
@@ -356,7 +357,6 @@
         <div class="nav-links">
             <a href="#">Xizmatlar</a>
             <a href="#">Qoidalar</a>
-            <a href="/panel/" class="btn btn-outline" style="padding: 0.5rem 1.5rem; margin-left: 1rem;">Boshqaruv Paneli</a>
         </div>
     </nav>
 
@@ -366,7 +366,7 @@
         <p class="subtitle">O'zingizni professional o'yinlar olamida sinab ko'ring. Univers Mafia bilan chegaralarni kengaytiring va shaxsiy statistikangizni boshqaring.</p>
         
         <div class="actions">
-            <a href="/panel/" class="btn btn-gold">Hozir Boshlash</a>
+            <a href="#vip" class="btn btn-gold">VIP Guruhlar</a>
             <a href="#" class="btn btn-outline">Batafsil Ma'lumot</a>
         </div>
 
@@ -388,12 +388,19 @@
             </div>
         </div>
 
-        <section class="vip-section">
+        <section class="vip-section" id="vip">
             <h2>Bizning <span>VIP Guruhlar</span></h2>
             <div class="vip-grid">
                 {% for chat in vip_chats %}
                 <div class="vip-card">
-                    <div class="vip-icon">💎</div>
+                    <div class="vip-icon">
+                        <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
                     <h3>{{ chat.title }}</h3>
                     {% if chat.invite_link %}
                     <a href="{{ chat.invite_link }}" target="_blank" class="btn btn-outline btn-sm">Qo'shilish</a>
