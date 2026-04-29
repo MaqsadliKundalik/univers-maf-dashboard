@@ -338,6 +338,82 @@
             grid-column: 1 / -1;
         }
 
+        /* Stats Section */
+        .stats-section {
+            margin-top: 6rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .stats-grid {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 3rem;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.2));
+            border: 1px solid rgba(212, 175, 55, 0.05);
+            backdrop-filter: var(--glass-effect);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+
+        .stat-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .circular-progress {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            margin-bottom: 1.5rem;
+        }
+
+        .circular-progress svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .circular-progress circle {
+            fill: none;
+            stroke-width: 6;
+            stroke-linecap: round;
+        }
+
+        .circular-progress circle.bg {
+            stroke: rgba(255, 255, 255, 0.05);
+        }
+
+        .circular-progress circle.progress {
+            stroke: var(--gold);
+            stroke-dasharray: 440; /* 2 * pi * 70 = ~440 */
+            stroke-dashoffset: 440;
+            transition: stroke-dashoffset 2s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.5));
+        }
+
+        .stat-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            text-shadow: var(--gold-glow);
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
         @media (max-width: 768px) {
             h1 { font-size: 2.5rem; }
             nav { padding: 1rem; flex-direction: column; gap: 1rem; }
@@ -388,6 +464,43 @@
             </div>
         </div>
 
+        <section class="stats-section" id="stats">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="circular-progress" data-target="{{ stats.users_count|default:0 }}">
+                        <svg viewBox="0 0 160 160">
+                            <circle class="bg" cx="80" cy="80" r="70"></circle>
+                            <circle class="progress" cx="80" cy="80" r="70"></circle>
+                        </svg>
+                        <div class="stat-value">0</div>
+                    </div>
+                    <div class="stat-label">Foydalanuvchilar</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="circular-progress" data-target="{{ stats.chats_count|default:0 }}">
+                        <svg viewBox="0 0 160 160">
+                            <circle class="bg" cx="80" cy="80" r="70"></circle>
+                            <circle class="progress" cx="80" cy="80" r="70"></circle>
+                        </svg>
+                        <div class="stat-value">0</div>
+                    </div>
+                    <div class="stat-label">Guruhlar</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="circular-progress" data-target="{{ stats.games_count|default:0 }}">
+                        <svg viewBox="0 0 160 160">
+                            <circle class="bg" cx="80" cy="80" r="70"></circle>
+                            <circle class="progress" cx="80" cy="80" r="70"></circle>
+                        </svg>
+                        <div class="stat-value">0</div>
+                    </div>
+                    <div class="stat-label">O'tkazilgan o'yinlar</div>
+                </div>
+            </div>
+        </section>
+
         <section class="vip-section" id="vip">
             <h2>Bizning <span>VIP Guruhlar</span></h2>
             <div class="vip-grid">
@@ -414,5 +527,62 @@
             </div>
         </section>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.5
+            };
+
+            const statsObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        const targetVal = parseInt(el.getAttribute('data-target')) || 0;
+                        const valueEl = el.querySelector('.stat-value');
+                        const progressCircle = el.querySelector('.progress');
+                        
+                        // Start the circle stroke animation (440 is the dasharray)
+                        setTimeout(() => {
+                            progressCircle.style.strokeDashoffset = '0';
+                        }, 100);
+
+                        // Start the number counting animation
+                        const duration = 2000;
+                        const startTime = performance.now();
+
+                        function updateCounter(currentTime) {
+                            const elapsed = currentTime - startTime;
+                            const progress = Math.min(elapsed / duration, 1);
+                            
+                            // easeOutQuart easing function for smooth deceleration
+                            const easeOut = 1 - Math.pow(1 - progress, 4);
+                            const currentVal = Math.floor(easeOut * targetVal);
+                            
+                            valueEl.textContent = currentVal.toLocaleString();
+                            
+                            if (progress < 1) {
+                                requestAnimationFrame(updateCounter);
+                            } else {
+                                valueEl.textContent = targetVal.toLocaleString();
+                            }
+                        }
+                        
+                        requestAnimationFrame(updateCounter);
+                        
+                        // Stop observing once animated
+                        observer.unobserve(el);
+                    }
+                });
+            }, observerOptions);
+
+            // Observe all circular progress elements
+            document.querySelectorAll('.circular-progress').forEach(el => {
+                statsObserver.observe(el);
+            });
+        });
+    </script>
 </body>
 </html>
