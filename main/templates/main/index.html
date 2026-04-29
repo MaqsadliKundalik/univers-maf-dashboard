@@ -490,6 +490,7 @@
         </div>
 
         <section class="stats-section" id="stats">
+            <h2 style="text-align: center; color: var(--gold); margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 2px;">Shu oydagi <span>Statistikalar</span></h2>
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="circular-progress" data-target="{{ stats.users_count|default:0 }}">
@@ -527,7 +528,7 @@
         </section>
 
         <section class="top-players-section" id="top">
-            <h2>Eng zo'r <span>O'yinchilar</span></h2>
+            <h2>Shu oydagi <span>Eng zo'rlar</span></h2>
             <div class="players-list">
                 {% for player in top_players %}
                 <div class="player-row {% if forloop.counter <= 3 %}rank-{{ forloop.counter }}{% endif %}">
@@ -535,8 +536,8 @@
                     <div class="player-name">{{ player.user.full_name|default:player.user.mention }}</div>
                     <div class="player-stats">
                         <div class="player-stat">
-                            <span class="player-stat-value">{{ player.wins }}</span>
-                            <span class="player-stat-label">G'alaba</span>
+                            <span class="player-stat-value">{{ player.score }}</span>
+                            <span class="player-stat-label">Ball</span>
                         </div>
                         <div class="player-stat">
                             <span class="player-stat-value">{{ player.games_count }}</span>
