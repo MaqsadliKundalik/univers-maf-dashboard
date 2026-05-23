@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BloodyMafia</title>
+    <style>
+        :root {
+            --bg: #0d1017;
+            --panel: #171d27;
+            --line: #2a3342;
+            --red: #d64a4a;
+            --text: #f4f7fb;
+            --muted: #8f9bad;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        .wrap { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 56px 0; }
+        header { margin-bottom: 32px; }
+        h1 { margin: 0; font-size: clamp(2rem, 6vw, 4.5rem); line-height: 1; color: var(--red); }
+        p { color: var(--muted); }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 28px 0; }
+        .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; }
+        .value { font-size: 2rem; font-weight: 800; }
+        .label { color: var(--muted); font-size: .85rem; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--line); }
+        th { color: var(--muted); font-size: .78rem; text-transform: uppercase; }
+        @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <main class="wrap">
+        <header>
+            <h1>BloodyMafia</h1>
+            <p>Bot statistikasi va umumiy reyting.</p>
+        </header>
+
+        <section class="grid">
+            <div class="card"><div class="value">{{ stats.users_count }}</div><div class="label">Foydalanuvchilar</div></div>
+            <div class="card"><div class="value">{{ stats.chats_count }}</div><div class="label">Guruhlar</div></div>
+            <div class="card"><div class="value">{{ stats.games_count }}</div><div class="label">O'yinlar</div></div>
+        </section>
+
+        <section class="card">
+            <h2 style="margin:0 0 12px;font-size:1.1rem">Top o'yinchilar</h2>
+            <table>
+                <thead><tr><th>#</th><th>Foydalanuvchi</th><th>G'alaba</th><th>O'yin</th></tr></thead>
+                <tbody>
+                    {% for item in top_players %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item.user.full_name|default:item.user.mention|striptags }}</td>
+                        <td>{{ item.wins }}</td>
+                        <td>{{ item.games_count }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" style="color:var(--muted)">Ma'lumot yo'q</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </main>
+</body>
+</html>

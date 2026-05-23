@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ chat.title }} - BloodyMafia</title>
+    <style>
+        :root { --bg:#0d1017; --panel:#171d27; --line:#2a3342; --red:#d64a4a; --text:#f4f7fb; --muted:#8f9bad; }
+        * { box-sizing: border-box; }
+        body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+        .wrap { width:min(980px, calc(100% - 32px)); margin:0 auto; padding:36px 0; }
+        header { margin-bottom:24px; }
+        h1 { margin:0; color:var(--red); font-size:clamp(1.8rem, 5vw, 3rem); }
+        .muted { color:var(--muted); }
+        .tabs { display:flex; gap:8px; flex-wrap:wrap; margin:20px 0; }
+        .tabs a { color:var(--muted); border:1px solid var(--line); padding:8px 14px; border-radius:8px; text-decoration:none; }
+        .tabs a.active { background:var(--red); color:white; border-color:var(--red); }
+        .grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:20px; }
+        .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px; }
+        .value { font-size:1.8rem; font-weight:800; }
+        .label { color:var(--muted); font-size:.82rem; margin-top:4px; }
+        .row { display:flex; align-items:center; gap:14px; padding:14px 0; border-bottom:1px solid var(--line); }
+        .row:last-child { border-bottom:0; }
+        .rank { width:36px; color:var(--red); font-weight:800; }
+        .name { flex:1; min-width:0; overflow-wrap:anywhere; }
+        .stat { text-align:right; min-width:70px; }
+        @media (max-width:680px) { .grid { grid-template-columns:1fr; } .row { align-items:flex-start; } }
+    </style>
+</head>
+<body>
+    <main class="wrap">
+        <header>
+            <div class="muted">{{ chat.type|title }}</div>
+            <h1>{{ chat.title }}</h1>
+            <div class="muted">Guruh statistikasi va reyting</div>
+        </header>
+
+        <nav class="tabs">
+            <a href="?period=day" class="{% if period == 'day' %}active{% endif %}">Bugun</a>
+            <a href="?period=week" class="{% if period == 'week' %}active{% endif %}">Hafta</a>
+            <a href="?period=month" class="{% if period == 'month' or not period %}active{% endif %}">Oy</a>
+        </nav>
+
+        <section class="grid">
+            <div class="card"><div class="value">{{ stats.participants_count }}</div><div class="label">Ishtirokchilar</div></div>
+            <div class="card"><div class="value">{{ stats.games_count }}</div><div class="label">O'tkazilgan o'yinlar</div></div>
+            <div class="card"><div class="value">{{ total_diamond }}</div><div class="label">Guruh diamond hisobi</div></div>
+        </section>
+
+        <section class="card" style="margin-bottom:20px">
+            <h2 style="margin:0 0 8px;font-size:1.1rem">Reyting</h2>
+            {% for player in top_players %}
+            <div class="row">
+                <div class="rank">#{{ forloop.counter }}</div>
+                <div class="name">{{ player.user.full_name|default:player.user.mention|striptags }}</div>
+                <div class="stat"><strong>{{ player.score }}</strong><div class="muted">ball</div></div>
+                <div class="stat"><strong>{{ player.games_count }}</strong><div class="muted">o'yin</div></div>
+            </div>
+            {% empty %}
+            <p class="muted">Ushbu davrda hali o'yinlar o'tkazilmagan.</p>
+            {% endfor %}
+        </section>
+
+        <section class="card">
+            <h2 style="margin:0 0 8px;font-size:1.1rem">O'tkazishlar tarixi</h2>
+            {% for transfer in transfer_history %}
+            <div class="row">
+                <div class="name">{{ transfer.user }}</div>
+                <div class="stat"><strong>{{ transfer.amount }}</strong><div class="muted">{{ transfer.created_at|date:"d.m.Y H:i" }}</div></div>
+            </div>
+            {% empty %}
+            <p class="muted">Hali guruhga diamond o'tkazilmagan.</p>
+            {% endfor %}
+        </section>
+    </main>
+</body>
+</html>
