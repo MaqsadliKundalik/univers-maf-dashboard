@@ -75,6 +75,31 @@ class ActiveRole(models.Model):
         return f"{self.role} - {self.profile}"
 
 
+class ChangeDiamondGiveAway(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    creator = models.ForeignKey(User, related_name="change_giveaways", on_delete=models.CASCADE)
+    chat_id = models.BigIntegerField()
+    message_id = models.BigIntegerField()
+    amount = models.BigIntegerField()
+    collected_users = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "changediamondgiveaway"
+        managed = False
+
+
+class OpenSandiqs(models.Model):
+    user = models.ForeignKey(User, related_name="open_sandiqs", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    sandiq_type = models.CharField(max_length=20, default="mega")
+
+    class Meta:
+        db_table = "opensandiqs"
+        managed = False
+
+
 class XCoinWallet(models.Model):
     user = models.ForeignKey(User, related_name="xcoin_wallet", on_delete=models.CASCADE)
     xcoin = models.BigIntegerField(default=0)
@@ -87,6 +112,16 @@ class XCoinWallet(models.Model):
 
     def __str__(self):
         return f"XCoin: {self.user} - {self.xcoin}"
+
+
+class XCoinPrice(models.Model):
+    price = models.BigIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "xcoinprice"
+        managed = False
 
 
 class Transfer(models.Model):
@@ -148,6 +183,17 @@ class VipUser(models.Model):
         return f"VIP: {self.user}"
 
 
+class VipUserStatus(models.Model):
+    vip_user = models.ForeignKey(VipUser, related_name="vip_user_status", on_delete=models.CASCADE)
+    status = models.IntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "vipuserstatus"
+        managed = False
+
+
 class Para(models.Model):
     user1 = models.ForeignKey(User, related_name="paralar1", on_delete=models.CASCADE)
     user2 = models.ForeignKey(User, related_name="paralar2", on_delete=models.CASCADE)
@@ -204,6 +250,42 @@ class Geroy(models.Model):
         if needed == prev:
             return 100
         return min(100, int((self.ball - prev) / (needed - prev) * 100))
+
+
+class GeroyMarket(models.Model):
+    user = models.ForeignKey(User, related_name="geroy_market", on_delete=models.CASCADE)
+    geroy = models.ForeignKey(Geroy, related_name="in_geroy_market", on_delete=models.CASCADE)
+    price = models.BigIntegerField()
+    is_sold = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "geroymarket"
+        managed = False
+
+
+class GeroyStatus(models.Model):
+    geroy = models.ForeignKey(Geroy, related_name="geroy_status", on_delete=models.CASCADE)
+    status = models.CharField(max_length=30)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "geroystatus"
+        managed = False
+
+
+class StatusesList(models.Model):
+    emoji_id = models.CharField(max_length=30)
+    type = models.IntegerField(default=1)
+    price = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "statuseslist"
+        managed = False
 
 
 class Giveaway(models.Model):
@@ -433,3 +515,238 @@ class VipChats(models.Model):
 
     def __str__(self):
         return f"VIP Chat: {self.chat_id}"
+
+
+class GameSetTime(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    chat_id = models.BigIntegerField(unique=True)
+    day_time = models.BigIntegerField(default=45)
+    night_time = models.BigIntegerField(default=45)
+    vote_time = models.BigIntegerField(default=30)
+    like_time = models.BigIntegerField(default=30)
+    word_time = models.BigIntegerField(default=30)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "game_sets_time"
+        managed = False
+
+
+class GameModeSet(models.Model):
+    chat_id = models.BigIntegerField(unique=True)
+    mode_name = models.CharField(max_length=20, default="classic")
+
+    class Meta:
+        db_table = "gamemodeset"
+        managed = False
+
+
+class GameSetListRoles(models.Model):
+    chat_id = models.BigIntegerField(unique=True)
+    blacklist = models.TextField(default="")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "gamesetlistroles"
+        managed = False
+
+    def get_blacklist(self):
+        return [role for role in self.blacklist.split(",") if role]
+
+
+class GameSetPermissions(models.Model):
+    chat_id = models.BigIntegerField(unique=True)
+    anonim_ovoz_berish = models.BooleanField(default=False)
+    leave_qilish = models.BooleanField(default=True)
+    last_word_say = models.BooleanField(default=True)
+    frendly_fire = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "gamesetpermissions"
+        managed = False
+
+
+class GameSetWeapons(models.Model):
+    chat_id = models.BigIntegerField(unique=True)
+    himoya = models.BooleanField(default=True)
+    hujjat = models.BooleanField(default=True)
+    qotildan_himoya = models.BooleanField(default=True)
+    ovozdan_himoya = models.BooleanField(default=True)
+    miltiq = models.BooleanField(default=True)
+    doridan_himoya = models.BooleanField(default=True)
+    slip_himoya = models.BooleanField(default=True)
+    maska = models.BooleanField(default=True)
+    geroy = models.BooleanField(default=True)
+    active_role = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "gamesetweapons"
+        managed = False
+
+
+class GroupBalance(models.Model):
+    chat_id = models.BigIntegerField(unique=True)
+    balance = models.BigIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_reset_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "groupbalance"
+        managed = False
+
+
+class GroupGiveSet(models.Model):
+    chat_id = models.BigIntegerField(unique=True)
+    diamond = models.BigIntegerField(default=0)
+    dollar = models.BigIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "groupgiveset"
+        managed = False
+
+
+class GroupMoreSet(models.Model):
+    chat_id = models.BigIntegerField(unique=True)
+    mafning_ovozi = models.BooleanField(default=True)
+    adv_view = models.BooleanField(default=True)
+    max_players = models.BigIntegerField(default=30)
+    rollarni_guruhlash = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "groupmoreset"
+        managed = False
+
+
+class CommandPermissionsChat(models.Model):
+    chat_id = models.BigIntegerField(unique=True)
+    start_cmd = models.CharField(max_length=10)
+    stop_cmd = models.CharField(max_length=10)
+    game_cmd = models.CharField(max_length=10)
+    top1_cmd = models.CharField(max_length=10)
+    top7_cmd = models.CharField(max_length=10)
+    top30_cmd = models.CharField(max_length=10)
+    gtop1_cmd = models.CharField(max_length=10)
+    gtop7_cmd = models.CharField(max_length=10)
+    gtop30_cmd = models.CharField(max_length=10)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "commandpermissionschat"
+        managed = False
+
+
+class WriteGroupPermis(models.Model):
+    chat_id = models.BigIntegerField(unique=True)
+    night = models.CharField(max_length=20, default="alive")
+    day = models.CharField(max_length=20, default="alive")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "writegrouppermis"
+        managed = False
+
+
+class GamingOnChat(models.Model):
+    chat_id = models.BigIntegerField()
+    can_gaming = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    bot_id = models.BigIntegerField(null=True, blank=True)
+
+    class Meta:
+        db_table = "gamingonchat"
+        managed = False
+
+
+class BlockGrousp(models.Model):
+    chat_id = models.BigIntegerField(unique=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "blockgrousp"
+        managed = False
+
+
+class NickList(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    chat_id = models.BigIntegerField(unique=True)
+    name = models.CharField(max_length=50)
+
+    class Meta:
+        db_table = "nicklist"
+        managed = False
+
+
+class NickModeSet(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    chat_id = models.BigIntegerField(unique=True)
+    selected_nicklist = models.ForeignKey(NickList, related_name="used_in_chats", on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        db_table = "nickmodeset"
+        managed = False
+
+
+class NickListItem(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    nick_list = models.ForeignKey(NickList, related_name="nick_items", on_delete=models.CASCADE)
+    nick_name = models.CharField(max_length=30)
+
+    class Meta:
+        db_table = "nicklistitem"
+        managed = False
+
+
+class WolfOrFoxSet(models.Model):
+    chat_id = models.BigIntegerField(unique=True)
+    wolf_or_fox = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "wolforfoxset"
+        managed = False
+
+
+class TransfersReportsChat(models.Model):
+    chat_id = models.BigIntegerField(unique=True)
+    report_diamond = models.BooleanField(default=True)
+    report_dollar = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "transfersreportschat"
+        managed = False
+
+
+class AutoStartGameTimeSetChat(models.Model):
+    chat_id = models.BigIntegerField(unique=True)
+    auto_start_game_time = models.BigIntegerField(default=90)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "autostartgametimesetchat"
+        managed = False
+
+
+class SubscriptionConfig(models.Model):
+    id = models.IntegerField(primary_key=True)
+    price = models.IntegerField(default=80)
+    duration_days = models.IntegerField(default=30)
+
+    class Meta:
+        db_table = "subscription_config"
+        managed = False
+
+
+class GroupSubscription(models.Model):
+    chat_id = models.BigIntegerField(unique=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "group_subscriptions"
+        managed = False

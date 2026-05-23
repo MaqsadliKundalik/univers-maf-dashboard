@@ -167,6 +167,8 @@
         }
         .mini-icon::before { content:""; width:8px; height:8px; border-radius:50%; background:currentColor; box-shadow:0 0 0 3px rgba(210,10,34,.08); }
         .mini-icon.game::before { width:11px; height:7px; border-radius:4px; }
+        .mini-icon.wallet::before { width:12px; height:9px; border-radius:3px; }
+        .mini-icon.calendar::before { width:11px; height:11px; border-radius:3px; box-shadow:inset 0 3px 0 rgba(255,255,255,.58), 0 0 0 3px rgba(210,10,34,.08); }
         .mini-icon.gem {
             background:rgba(210,10,34,.14);
             color:var(--blood-2);
@@ -255,7 +257,23 @@
             <div class="metrics-panel">
                 <div class="metric"><div class="value">{{ stats.participants_count }}</div><div class="label"><span class="mini-icon rank"></span>Ishtirokchilar</div></div>
                 <div class="metric"><div class="value">{{ stats.games_count }}</div><div class="label"><span class="mini-icon game"></span>O'yinlar</div></div>
-                <div class="metric"><div class="value">{{ total_diamond }}</div><div class="label"><span class="mini-icon gem"></span>Guruh olmos hisobi</div></div>
+                <div class="metric"><div class="value">{{ group_account.balance }}</div><div class="label"><span class="mini-icon wallet"></span>Guruh balansi</div></div>
+                <div class="metric">
+                    <div class="value">
+                        {% if group_account.subscription_expires_at %}
+                            {{ group_account.subscription_expires_at|date:"d.m.Y" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                    <div class="label">
+                        <span class="mini-icon calendar"></span>
+                        Obuna: {{ group_account.subscription_status }}
+                        {% if group_account.subscription_is_active %}({{ group_account.subscription_days_left }} kun){% endif %}
+                    </div>
+                    <div class="label" style="margin-top:5px">{{ group_account.subscription_price }} olmos / {{ group_account.subscription_duration_days }} kun</div>
+                </div>
+                <div class="metric"><div class="value">{{ total_diamond }}</div><div class="label"><span class="mini-icon gem"></span>30 kunlik olmos kirimi</div></div>
             </div>
         </section>
 

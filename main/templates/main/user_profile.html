@@ -231,18 +231,45 @@
             clip-path:polygon(18% 0, 82% 0, 100% 36%, 50% 100%, 0 36%);
             border-radius:1px;
         }
-        .mini-icon.money::before { width:18px; height:18px; border-radius:50%; background:linear-gradient(180deg, currentColor, #137744); box-shadow:inset 0 0 0 5px rgba(255,255,255,.76); }
+        .mini-icon.money {
+            background:linear-gradient(145deg, #ebfff2, #49de83);
+            color:#097744;
+        }
+        .mini-icon.money::before {
+            width:24px;
+            height:16px;
+            border-radius:4px;
+            background:#fff;
+            box-shadow:inset 0 0 0 2px rgba(9,119,68,.72), 0 8px 15px rgba(9,119,68,.14);
+        }
+        .mini-icon.money::after {
+            content:"$";
+            position:absolute;
+            color:#097744;
+            font-size:14px;
+            font-weight:900;
+            line-height:1;
+        }
         .mini-icon.win::before { width:19px; height:14px; border-radius:3px 3px 11px 11px; clip-path:polygon(8% 0, 92% 0, 82% 72%, 58% 72%, 58% 100%, 42% 100%, 42% 72%, 18% 72%); }
         .mini-icon.game::before { width:21px; height:14px; border-radius:7px; box-shadow:inset 6px 0 0 rgba(255,255,255,.65), inset -6px 0 0 rgba(255,255,255,.65); }
         .mini-icon.shield::before { width:17px; height:20px; border-radius:10px 10px 5px 5px; clip-path:polygon(50% 0, 92% 18%, 84% 76%, 50% 100%, 16% 76%, 8% 18%); }
         .mini-icon.doc::before { width:15px; height:20px; border-radius:3px; clip-path:polygon(0 0, 72% 0, 100% 28%, 100% 100%, 0 100%); }
         .mini-icon.xcoin::before {
-            width:18px;
-            height:18px;
+            width:24px;
+            height:24px;
             border-radius:50%;
+            background:linear-gradient(145deg, #47efff, #2776ff 58%, #11245f);
             box-shadow:
-                0 0 0 3px rgba(210,10,34,.08),
-                inset 0 0 0 6px rgba(255,255,255,.65);
+                0 0 0 3px rgba(39,118,255,.12),
+                inset 0 0 0 3px rgba(255,255,255,.55);
+        }
+        .mini-icon.xcoin::after {
+            content:"X";
+            position:absolute;
+            color:#fff;
+            font-size:13px;
+            font-weight:900;
+            line-height:1;
         }
         .mini-icon.target::before {
             width:20px;
@@ -476,6 +503,22 @@
 
         .item-title { font-weight:700; color:#211f24; }
         .item strong { display:inline-flex; align-items:center; justify-content:flex-end; gap:8px; min-width:92px; text-align:right; }
+        .item.stat-item { background:linear-gradient(145deg, #fff, #fff4f6); border-color:rgba(127,0,21,.16); }
+
+        .roles-list { display:grid; gap:10px; position:relative; z-index:1; }
+        .role-card {
+            display:grid;
+            grid-template-columns:auto minmax(0,1fr) auto;
+            align-items:center;
+            gap:12px;
+            padding:13px;
+            border-radius:16px;
+            background:linear-gradient(145deg, rgba(255,255,255,.96), rgba(255,246,247,.92));
+            border:1px solid rgba(127,0,21,.12);
+            color:#1b1a1e;
+            box-shadow:0 10px 24px rgba(45,6,10,.06);
+        }
+        .role-card .status-pill { color:#fff; background:linear-gradient(135deg, var(--blood), var(--blood-2)); }
 
         .two { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
         .row {
@@ -503,6 +546,8 @@
             .profile-main { padding:22px; }
             .avatar-slot { width:104px; height:104px; border-radius:26px; font-size:2.6rem; }
             .metrics-panel,.items,.two { grid-template-columns:1fr; }
+            .role-card { grid-template-columns:auto minmax(0,1fr); }
+            .role-card .status-pill { grid-column:2; justify-self:start; }
             .transfer-card { grid-template-columns:auto minmax(0, 1fr); }
             .transfer-amount { grid-column:2; text-align:left; }
             .row { align-items:flex-start; }
@@ -532,9 +577,7 @@
                 <div class="metric"><span class="mini-icon money"></span><div class="label">Dollar</div><div class="value">{{ profile.dollar|default:0 }}</div></div>
                 <div class="metric"><span class="mini-icon gem"></span><div class="label">Olmos</div><div class="value">{{ profile.diamond|default:0 }}</div></div>
                 <div class="metric"><span class="mini-icon xcoin"></span><div class="label">XCoin</div><div class="value">{{ xcoin_wallet.xcoin|default:0 }}</div></div>
-                <div class="metric"><span class="mini-icon target"></span><div class="label">G'alaba</div><div class="value">{{ profile.wins|default:0 }}</div></div>
-                <div class="metric"><span class="mini-icon game"></span><div class="label">Barcha o'yinlar</div><div class="value">{{ profile.games_count|default:0 }}</div></div>
-                <div class="metric"><span class="mini-icon role"></span><div class="label">Faol rollar</div><div class="value">{{ active_roles|length }}</div></div>
+                <div class="metric"><span class="mini-icon target"></span><div class="label">Shu oy ball</div><div class="value">{{ score }}</div></div>
             </div>
         </section>
 
@@ -550,10 +593,35 @@
                     <div class="item"><span class="item-title"><span class="mini-icon doc"></span>Hujjat</span><strong>{{ profile.hujjat }} <span class="status-pill {% if not profile.on_hujjat %}off{% endif %}">{% if profile.on_hujjat %}ON{% else %}OFF{% endif %}</span></strong></div>
                     <div class="item"><span class="item-title"><span class="mini-icon shield"></span>Osishdan himoya</span><strong>{{ profile.osishdan_himoya }} <span class="status-pill {% if not profile.on_osishdan_himoya %}off{% endif %}">{% if profile.on_osishdan_himoya %}ON{% else %}OFF{% endif %}</span></strong></div>
                     <div class="item"><span class="item-title"><span class="mini-icon shield"></span>Geroy himoya</span><strong>{{ profile.geroy_himoya }} <span class="status-pill {% if not profile.on_geroy_himoya %}off{% endif %}">{% if profile.on_geroy_himoya %}ON{% else %}OFF{% endif %}</span></strong></div>
+                    <div class="item stat-item"><span class="item-title"><span class="mini-icon target"></span>G'alaba</span><strong>{{ profile.wins|default:0 }}</strong></div>
+                    <div class="item stat-item"><span class="item-title"><span class="mini-icon game"></span>Barcha o'yinlar</span><strong>{{ profile.games_count|default:0 }}</strong></div>
                 </div>
             </div>
         </section>
         {% endif %}
+
+        <section class="section">
+            <div class="section-card light">
+                <div class="section-head">
+                    <h2>Faol rollar</h2>
+                    <div class="section-label">{{ active_roles|length }} ta</div>
+                </div>
+                <div class="roles-list">
+                    {% for active_role in active_roles %}
+                    <div class="role-card">
+                        <span class="mini-icon role"></span>
+                        <div class="name">
+                            <strong>{{ active_role.role }}</strong>
+                            <div class="muted">{{ active_role.created_at|date:"d.m.Y H:i" }}</div>
+                        </div>
+                        <span class="status-pill">ACTIVE</span>
+                    </div>
+                    {% empty %}
+                    <p class="muted">Yo'q</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
 
         <section class="section" id="transfers-section"
                  data-prev-url="{% if transfers_page.has_previous %}?transfers_page={{ transfers_page.previous_page_number }}#transfers-section{% endif %}"
@@ -600,15 +668,6 @@
                     <div class="section-label">o'yinlar va guruhlar</div>
                 </div>
                 <div class="two">
-                    <div>
-                        <div class="section-label">Faol rollar</div>
-                        {% for active_role in active_roles %}
-                        <div class="row">
-                            <div class="name"><span class="item-title"><span class="mini-icon role"></span>{{ active_role.role }}</span></div>
-                            <span class="section-label">active</span>
-                        </div>
-                        {% empty %}<p class="muted">Yo'q</p>{% endfor %}
-                    </div>
                     <div>
                         <div class="section-label">So'nggi o'yinlar</div>
                         {% for gp in games %}

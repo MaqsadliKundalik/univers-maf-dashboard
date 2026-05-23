@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, timezone as dt_timezone
 
 from django.core.cache import cache
 from django.core.paginator import Paginator
@@ -14,11 +14,14 @@ from bot.models import (
     Chat,
     Game,
     GamePlayer,
+    GroupBalance,
     Geroy,
     GroupIncome,
+    GroupSubscription,
     Para,
     PlayersGameBall,
     Profile,
+    SubscriptionConfig,
     Transfer,
     User,
     VipUser,
@@ -162,6 +165,29 @@ def group_stats(request, token):
         recent_incomes = []
         transfer_history_page = Paginator([], 20).get_page(1)
 
+    try:
+        group_balance = GroupBalance.objects.filter(chat_id=chat.chat_id).first()
+        subscription = GroupSubscription.objects.filter(chat_id=chat.chat_id).first()
+        subscription_config = SubscriptionConfig.objects.order_by('id').first()
+    except Exception:
+        group_balance = None
+        subscription = None
+        subscription_config = None
+
+    now = timezone.now()
+    balance_amount = group_balance.balance if group_balance else 0
+    subscription_expires_at = subscription.expires_at if subscription else None
+    if subscription_expires_at and timezone.is_naive(subscription_expires_at):
+        subscription_expires_at = timezone.make_aware(subscription_expires_at, dt_timezone.utc)
+    subscription_is_active = bool(subscription_expires_at and subscription_expires_at > now)
+    subscription_days_left = (subscription_expires_at - now).days if subscription_is_active else 0
+    if subscription_is_active:
+        subscription_status = 'Faol'
+    elif subscription_expires_at:
+        subscription_status = 'Tugagan'
+    else:
+        subscription_status = "Yo'q"
+
     users_map = {u.user_id: u for u in User.objects.filter(user_id__in=[inc.user_id for inc in recent_incomes])}
     transfer_history = []
     for inc in recent_incomes:
@@ -180,6 +206,15 @@ def group_stats(request, token):
         'transfer_history': transfer_history,
         'transfer_history_page': transfer_history_page,
         'stats_period_label': "So'nggi 30 kun",
+        'group_account': {
+            'balance': balance_amount,
+            'subscription_status': subscription_status,
+            'subscription_is_active': subscription_is_active,
+            'subscription_expires_at': subscription_expires_at,
+            'subscription_days_left': subscription_days_left,
+            'subscription_price': subscription_config.price if subscription_config else 80,
+            'subscription_duration_days': subscription_config.duration_days if subscription_config else 30,
+        },
     })
 
 
