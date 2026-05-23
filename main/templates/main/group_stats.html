@@ -5,72 +5,292 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ chat.title }} - BloodyMafia</title>
     <style>
-        :root { --bg:#0d1017; --panel:#171d27; --line:#2a3342; --red:#d64a4a; --text:#f4f7fb; --muted:#8f9bad; }
-        * { box-sizing: border-box; }
-        body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-        .wrap { width:min(980px, calc(100% - 32px)); margin:0 auto; padding:36px 0; }
-        header { margin-bottom:24px; }
-        h1 { margin:0; color:var(--red); font-size:clamp(1.8rem, 5vw, 3rem); }
+        :root {
+            --page-top:#fff7f8;
+            --page-mid:#210208;
+            --page-bottom:#040405;
+            --paper:rgba(255,255,255,.96);
+            --ink:#101014;
+            --muted:#6c6670;
+            --line:rgba(128,0,20,.16);
+            --blood:#7f0015;
+            --blood-2:#d20a22;
+            --blood-hot:#ff3150;
+            --shadow:0 28px 80px rgba(64,0,12,.18), 0 10px 28px rgba(64,0,12,.1);
+            --radius:24px;
+        }
+
+        * { box-sizing:border-box; }
+
+        body {
+            margin:0;
+            color:var(--ink);
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+            background:
+                radial-gradient(circle at 9% 7%, rgba(255,49,80,.22), transparent 20rem),
+                radial-gradient(circle at 86% 20%, rgba(127,0,21,.18), transparent 22rem),
+                linear-gradient(180deg, var(--page-top) 0%, #fff 26%, #f9eef1 44%, var(--page-mid) 72%, var(--page-bottom) 100%);
+            min-height:100vh;
+        }
+
+        body::before {
+            content:"";
+            position:fixed;
+            inset:0;
+            pointer-events:none;
+            background:
+                linear-gradient(160deg, transparent 0 62%, rgba(127,0,21,.18) 62% 63%, transparent 63% 100%),
+                radial-gradient(circle at 4% 36%, rgba(127,0,21,.13) 0 24px, transparent 25px),
+                radial-gradient(circle at 97% 7%, rgba(210,10,34,.18) 0 36px, transparent 37px);
+            mix-blend-mode:multiply;
+        }
+
+        .wrap { width:min(1120px, calc(100% - 32px)); margin:0 auto; padding:32px 0 58px; }
+
+        .group-hero {
+            display:grid;
+            grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);
+            gap:18px;
+            align-items:stretch;
+            margin-bottom:20px;
+        }
+
+        .hero-card,
+        .metrics-panel,
+        .section-card {
+            background:var(--paper);
+            border:1px solid var(--line);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            position:relative;
+            overflow:hidden;
+            backdrop-filter:blur(16px);
+        }
+
+        .hero-card {
+            min-height:292px;
+            display:grid;
+            grid-template-columns:210px minmax(0,1fr);
+        }
+
+        .hero-card::before {
+            content:"";
+            position:absolute;
+            inset:0;
+            background:
+                linear-gradient(120deg, rgba(255,49,80,.16), transparent 38%),
+                radial-gradient(circle at 86% 18%, rgba(210,10,34,.2), transparent 13rem);
+            pointer-events:none;
+        }
+
+        .hero-card::after {
+            content:"";
+            position:absolute;
+            left:0;
+            right:0;
+            bottom:0;
+            height:5px;
+            background:linear-gradient(90deg, var(--blood), var(--blood-hot), var(--blood));
+            pointer-events:none;
+        }
+
+        .group-mark {
+            background:
+                radial-gradient(circle at 35% 24%, rgba(255,49,80,.48), transparent 5rem),
+                linear-gradient(145deg, #210208, #7f0015 54%, #190106);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:24px;
+            position:relative;
+        }
+
+        .group-mark::after {
+            content:"";
+            position:absolute;
+            inset:16px;
+            border:1px solid rgba(255,255,255,.2);
+            border-radius:20px;
+        }
+
+        .mark-core {
+            width:132px;
+            height:132px;
+            border-radius:34px;
+            background:linear-gradient(145deg, rgba(255,255,255,.94), rgba(255,235,238,.86));
+            color:var(--blood);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:3.2rem;
+            font-weight:900;
+            box-shadow:0 24px 52px rgba(0,0,0,.22), inset 0 0 0 1px rgba(255,255,255,.9);
+            z-index:1;
+        }
+
+        .hero-main { z-index:1; min-width:0; padding:30px; display:flex; flex-direction:column; justify-content:center; }
+        .eyebrow { color:var(--blood-2); font-size:.76rem; font-weight:900; text-transform:uppercase; letter-spacing:.14em; margin-bottom:10px; }
+        h1 { margin:0; color:#101014; font-size:clamp(2rem,4.5vw,3.35rem); line-height:1.02; overflow-wrap:anywhere; }
+        h2 { margin:0; color:#f8f2ef; font-size:1.05rem; }
+        .light h2 { color:#17171c; }
         .muted { color:var(--muted); }
-        .tabs { display:flex; gap:8px; flex-wrap:wrap; margin:20px 0; }
-        .tabs a { color:var(--muted); border:1px solid var(--line); padding:8px 14px; border-radius:8px; text-decoration:none; }
-        .tabs a.active { background:var(--red); color:white; border-color:var(--red); }
-        .grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:20px; }
-        .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px; }
-        .value { font-size:1.8rem; font-weight:800; }
-        .label { color:var(--muted); font-size:.82rem; margin-top:4px; }
-        .row { display:flex; align-items:center; gap:14px; padding:14px 0; border-bottom:1px solid var(--line); }
-        .row:last-child { border-bottom:0; }
-        .rank { width:36px; color:var(--red); font-weight:800; }
-        .name { flex:1; min-width:0; overflow-wrap:anywhere; }
-        .stat { text-align:right; min-width:70px; }
-        @media (max-width:680px) { .grid { grid-template-columns:1fr; } .row { align-items:flex-start; } }
+
+        .tabs { display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+        .tabs a {
+            color:#4f4850;
+            background:rgba(255,255,255,.76);
+            border:1px solid rgba(127,0,21,.18);
+            border-radius:999px;
+            padding:8px 13px;
+            text-decoration:none;
+            font-size:.86rem;
+            font-weight:800;
+            box-shadow:0 6px 16px rgba(127,0,21,.05);
+        }
+        .tabs a.active { background:linear-gradient(135deg,var(--blood),var(--blood-2)); color:white; border-color:transparent; }
+
+        .metrics-panel { padding:18px; display:grid; grid-template-columns:1fr; gap:12px; background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,246,247,.94)); }
+        .metric { background:linear-gradient(180deg,#fff,#fff4f6); border:1px solid rgba(127,0,21,.13); border-radius:18px; padding:16px; box-shadow:0 12px 24px rgba(127,0,21,.06); }
+        .value { font-size:1.72rem; font-weight:900; line-height:1; color:#111014; }
+        .label { color:var(--muted); font-size:.78rem; margin-top:8px; display:inline-flex; align-items:center; gap:8px; }
+
+        .mini-icon {
+            width:20px;
+            height:20px;
+            border-radius:8px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            background:rgba(210,10,34,.11);
+            color:var(--blood-2);
+            flex:0 0 auto;
+        }
+        .mini-icon::before { content:""; width:8px; height:8px; border-radius:50%; background:currentColor; box-shadow:0 0 0 3px rgba(210,10,34,.08); }
+        .mini-icon.game::before { width:11px; height:7px; border-radius:4px; }
+        .mini-icon.gem::before { width:9px; height:9px; border-radius:2px; transform:rotate(45deg); }
+        .mini-icon.rank::before { width:10px; height:6px; border-radius:2px 2px 7px 7px; }
+
+        .section { margin-top:18px; padding:1px; border-radius:calc(var(--radius) + 1px); background:linear-gradient(135deg, rgba(210,10,34,.36), rgba(255,255,255,.34), rgba(127,0,21,.18)); }
+        .section-card { padding:20px; color:#f8f2ef; background:linear-gradient(145deg, rgba(33,2,8,.92), rgba(9,9,11,.9)); box-shadow:0 24px 70px rgba(0,0,0,.18); }
+        .section-card.light { background:var(--paper); color:var(--ink); }
+        .section-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:12px; position:relative; z-index:1; }
+        .section-label { color:#b8a7a7; font-size:.78rem; }
+        .light .section-label { color:var(--muted); }
+
+        .leader-list,
+        .transfer-list { display:grid; gap:10px; position:relative; z-index:1; }
+
+        .leader-card,
+        .transfer-card {
+            display:grid;
+            grid-template-columns:auto minmax(0,1fr) auto;
+            align-items:center;
+            gap:13px;
+            padding:13px;
+            border-radius:18px;
+            background:rgba(255,255,255,.08);
+            border:1px solid rgba(255,255,255,.12);
+        }
+
+        .leader-card { background:rgba(255,255,255,.96); color:#16151a; border-color:rgba(127,0,21,.12); box-shadow:0 10px 24px rgba(127,0,21,.06); }
+        .rank { width:42px; height:42px; border-radius:16px; display:flex; align-items:center; justify-content:center; background:linear-gradient(145deg,var(--blood),var(--blood-2)); color:#fff; font-weight:900; box-shadow:0 12px 28px rgba(127,0,21,.18); }
+        .name { min-width:0; overflow-wrap:anywhere; }
+        .stats { display:flex; gap:10px; text-align:right; }
+        .stat { min-width:64px; }
+        .stat strong { display:block; }
+
+        .asset-icon { width:42px; height:42px; border-radius:16px; display:inline-flex; align-items:center; justify-content:center; color:#43c7ff; background:linear-gradient(145deg, rgba(67,199,255,.22), rgba(255,255,255,.04)); border:1px solid rgba(255,255,255,.14); box-shadow:0 12px 28px rgba(0,0,0,.14); }
+        .asset-icon::before { content:""; width:17px; height:17px; background:currentColor; transform:rotate(45deg); border-radius:4px; box-shadow:0 0 18px rgba(67,199,255,.46); }
+        .transfer-amount { text-align:right; font-weight:900; white-space:nowrap; }
+
+        @media (max-width:860px) {
+            .group-hero { grid-template-columns:1fr; }
+            .hero-card { grid-template-columns:1fr; min-height:0; }
+            .group-mark { min-height:180px; }
+        }
+
+        @media (max-width:640px) {
+            .wrap { width:min(100% - 22px, 1120px); padding-top:22px; }
+            .hero-main { padding:22px; }
+            .mark-core { width:104px; height:104px; border-radius:26px; font-size:2.6rem; }
+            .leader-card,.transfer-card { grid-template-columns:auto minmax(0,1fr); align-items:flex-start; }
+            .stats,.transfer-amount { grid-column:2; text-align:left; }
+        }
     </style>
 </head>
 <body>
     <main class="wrap">
-        <header>
-            <div class="muted">{{ chat.type|title }}</div>
-            <h1>{{ chat.title }}</h1>
-            <div class="muted">Guruh statistikasi va reyting</div>
-        </header>
+        <section class="group-hero">
+            <div class="hero-card">
+                <div class="group-mark">
+                    <div class="mark-core">{{ chat.title|striptags|slice:":1"|upper }}</div>
+                </div>
+                <div class="hero-main">
+                    <div class="eyebrow">BloodyMafia Group</div>
+                    <h1>{{ chat.title }}</h1>
+                    <div class="muted" style="margin-top:8px">{{ chat.type|title }} | Statistika va reyting</div>
+                    <nav class="tabs">
+                        <a href="?period=day" class="{% if period == 'day' %}active{% endif %}">Bugun</a>
+                        <a href="?period=week" class="{% if period == 'week' %}active{% endif %}">Hafta</a>
+                        <a href="?period=month" class="{% if period == 'month' or not period %}active{% endif %}">Oy</a>
+                    </nav>
+                </div>
+            </div>
 
-        <nav class="tabs">
-            <a href="?period=day" class="{% if period == 'day' %}active{% endif %}">Bugun</a>
-            <a href="?period=week" class="{% if period == 'week' %}active{% endif %}">Hafta</a>
-            <a href="?period=month" class="{% if period == 'month' or not period %}active{% endif %}">Oy</a>
-        </nav>
-
-        <section class="grid">
-            <div class="card"><div class="value">{{ stats.participants_count }}</div><div class="label">Ishtirokchilar</div></div>
-            <div class="card"><div class="value">{{ stats.games_count }}</div><div class="label">O'tkazilgan o'yinlar</div></div>
-            <div class="card"><div class="value">{{ total_diamond }}</div><div class="label">Guruh diamond hisobi</div></div>
+            <div class="metrics-panel">
+                <div class="metric"><div class="value">{{ stats.participants_count }}</div><div class="label"><span class="mini-icon rank"></span>Ishtirokchilar</div></div>
+                <div class="metric"><div class="value">{{ stats.games_count }}</div><div class="label"><span class="mini-icon game"></span>O'yinlar</div></div>
+                <div class="metric"><div class="value">{{ total_diamond }}</div><div class="label"><span class="mini-icon gem"></span>Guruh diamond hisobi</div></div>
+            </div>
         </section>
 
-        <section class="card" style="margin-bottom:20px">
-            <h2 style="margin:0 0 8px;font-size:1.1rem">Reyting</h2>
-            {% for player in top_players %}
-            <div class="row">
-                <div class="rank">#{{ forloop.counter }}</div>
-                <div class="name">{{ player.user.full_name|default:player.user.mention|striptags }}</div>
-                <div class="stat"><strong>{{ player.score }}</strong><div class="muted">ball</div></div>
-                <div class="stat"><strong>{{ player.games_count }}</strong><div class="muted">o'yin</div></div>
+        <section class="section">
+            <div class="section-card light">
+                <div class="section-head">
+                    <h2>Reyting</h2>
+                    <div class="section-label">{{ period|default:"month" }}</div>
+                </div>
+                <div class="leader-list">
+                    {% for player in top_players %}
+                    <div class="leader-card">
+                        <div class="rank">#{{ forloop.counter }}</div>
+                        <div class="name">
+                            <strong>{{ player.user.full_name|default:player.user.mention|striptags }}</strong>
+                            <div class="muted">reyting ishtirokchisi</div>
+                        </div>
+                        <div class="stats">
+                            <div class="stat"><strong>{{ player.score }}</strong><div class="muted">ball</div></div>
+                            <div class="stat"><strong>{{ player.games_count }}</strong><div class="muted">o'yin</div></div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="muted">Ushbu davrda hali o'yinlar o'tkazilmagan.</p>
+                    {% endfor %}
+                </div>
             </div>
-            {% empty %}
-            <p class="muted">Ushbu davrda hali o'yinlar o'tkazilmagan.</p>
-            {% endfor %}
         </section>
 
-        <section class="card">
-            <h2 style="margin:0 0 8px;font-size:1.1rem">O'tkazishlar tarixi</h2>
-            {% for transfer in transfer_history %}
-            <div class="row">
-                <div class="name">{{ transfer.user }}</div>
-                <div class="stat"><strong>{{ transfer.amount }}</strong><div class="muted">{{ transfer.created_at|date:"d.m.Y H:i" }}</div></div>
+        <section class="section">
+            <div class="section-card">
+                <div class="section-head">
+                    <h2>O'tkazishlar tarixi</h2>
+                    <div class="section-label">diamond kirimlari</div>
+                </div>
+                <div class="transfer-list">
+                    {% for transfer in transfer_history %}
+                    <div class="transfer-card">
+                        <span class="asset-icon" aria-label="diamond"></span>
+                        <div class="name">
+                            <strong>{{ transfer.user }}</strong>
+                            <div class="section-label">{{ transfer.created_at|date:"d.m.Y H:i" }}</div>
+                        </div>
+                        <div class="transfer-amount">{{ transfer.amount }}</div>
+                    </div>
+                    {% empty %}
+                    <p class="section-label">Hali guruhga diamond o'tkazilmagan.</p>
+                    {% endfor %}
+                </div>
             </div>
-            {% empty %}
-            <p class="muted">Hali guruhga diamond o'tkazilmagan.</p>
-            {% endfor %}
         </section>
     </main>
 </body>
