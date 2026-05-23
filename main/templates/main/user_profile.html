@@ -216,7 +216,16 @@
             box-shadow:0 0 0 3px rgba(210,10,34,.08);
         }
 
-        .mini-icon.gem::before { transform:rotate(45deg); border-radius:2px; }
+        .mini-icon.gem {
+            background:rgba(210,10,34,.14);
+            color:var(--blood-2);
+        }
+        .mini-icon.gem::before {
+            width:10px;
+            height:10px;
+            clip-path:polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%);
+            border-radius:1px;
+        }
         .mini-icon.win::before { width:10px; height:6px; border-radius:2px 2px 7px 7px; }
         .mini-icon.game::before { width:11px; height:7px; border-radius:4px; }
         .mini-icon.shield::before { width:9px; height:11px; border-radius:7px 7px 4px 4px; }
@@ -246,14 +255,20 @@
         }
 
         .asset-icon.diamond {
-            color:#43c7ff;
-            background:linear-gradient(145deg, rgba(67,199,255,.22), rgba(255,255,255,.04));
+            color:#fff7f8;
+            background:
+                radial-gradient(circle at 32% 24%, rgba(255,255,255,.42), transparent 1.2rem),
+                linear-gradient(145deg, var(--blood-hot), var(--blood) 62%, #250106);
+            border-color:rgba(255,49,80,.32);
+            box-shadow:0 14px 32px rgba(127,0,21,.28), inset 0 0 0 1px rgba(255,255,255,.18);
         }
 
         .asset-icon.diamond::before {
-            transform:rotate(45deg);
-            border-radius:4px;
-            box-shadow:0 0 18px rgba(67,199,255,.46);
+            width:19px;
+            height:18px;
+            clip-path:polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%);
+            border-radius:1px;
+            box-shadow:0 0 18px rgba(255,49,80,.38);
         }
 
         .asset-icon.dollar {
@@ -464,7 +479,7 @@
 
             <div class="metrics-panel">
                 <div class="metric"><div class="value">{{ profile.dollar|default:0 }}</div><div class="label metric-label"><span class="mini-icon money"></span>Dollar</div></div>
-                <div class="metric"><div class="value">{{ profile.diamond|default:0 }}</div><div class="label metric-label"><span class="mini-icon gem"></span>Diamond</div></div>
+                <div class="metric"><div class="value">{{ profile.diamond|default:0 }}</div><div class="label metric-label"><span class="mini-icon gem"></span>Olmos</div></div>
                 <div class="metric"><div class="value">{{ profile.wins|default:0 }}</div><div class="label metric-label"><span class="mini-icon win"></span>G'alaba</div></div>
                 <div class="metric"><div class="value">{{ profile.games_count|default:0 }}</div><div class="label metric-label"><span class="mini-icon game"></span>O'yinlar</div></div>
             </div>
