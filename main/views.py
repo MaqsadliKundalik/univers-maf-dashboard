@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.core.cache import cache
+from django.db import DatabaseError
 from django.db.models import Case, Count, F, IntegerField, OuterRef, Q, Subquery, Sum, When
 from django.db.models.functions import Coalesce
 from django.http import JsonResponse
@@ -142,19 +143,22 @@ def group_stats(request, token):
         }
         cache.set(cache_key, {'stats': stats, 'top_players': top_players}, 1800)
 
-    total_diamond = GroupIncome.objects.filter(chat_id=chat.chat_id).aggregate(Sum('amount'))['amount__sum'] or 0
-    recent_incomes = GroupIncome.objects.filter(chat_id=chat.chat_id).order_by('-created_at')[:50]
+    try:
+        total_diamond = GroupIncome.objects.filter(chat_id=chat.chat_id).aggregate(Sum('amount'))['amount__sum'] or 0
+        recent_incomes = list(GroupIncome.objects.filter(chat_id=chat.chat_id).order_by('-created_at')[:50])
+    except DatabaseError:
+        total_diamond = 0
+        recent_incomes = []
+
     users_map = {u.user_id: u for u in User.objects.filter(user_id__in=[inc.user_id for inc in recent_incomes])}
-    transfer_history = [
-        {
-            'user': users_map.get(inc.user_id).full_name
-            if users_map.get(inc.user_id) and users_map.get(inc.user_id).full_name
-            else (users_map.get(inc.user_id).mention if users_map.get(inc.user_id) else f"ID: {inc.user_id}"),
+    transfer_history = []
+    for inc in recent_incomes:
+        u = users_map.get(inc.user_id)
+        transfer_history.append({
+            'user': u.full_name if u and u.full_name else (u.mention if u else f"ID: {inc.user_id}"),
             'amount': inc.amount,
             'created_at': inc.created_at,
-        }
-        for inc in recent_incomes
-    ]
+        })
 
     return render(request, 'main/group_stats.html', {
         'chat': chat,
@@ -181,12 +185,26 @@ def user_profile(request, token):
     transfers_received = Transfer.objects.filter(to_user=user).order_by('-created_at')[:10]
 
     games = GamePlayer.objects.filter(user=user).select_related('game', 'game__chat').order_by('-joined_at')[:20]
-    score = _players_score_queryset(GamePlayer.objects.filter(user=user)).aggregate(total=Coalesce(Sum('delta'), 0))['total']
-    group_incomes = GroupIncome.objects.filter(user_id=user.user_id).values('chat_id').annotate(
-        total=Sum('amount')
-    ).filter(total__gt=0).order_by('-total')[:10]
-    chats_map = {chat.chat_id: chat for chat in Chat.objects.filter(chat_id__in=[inc['chat_id'] for inc in group_incomes])}
-    groups = [{'chat': chats_map.get(inc['chat_id']), 'chat_id': inc['chat_id'], 'total': inc['total']} for inc in group_incomes]
+
+    try:
+        score = _players_score_queryset(GamePlayer.objects.filter(user=user)).aggregate(
+            total=Coalesce(Sum('delta'), 0)
+        )['total'] or 0
+    except DatabaseError:
+        score = 0
+
+    try:
+        group_rows = list(GroupIncome.objects.filter(user_id=user.user_id).values('chat_id').annotate(
+            total=Sum('amount')
+        ).filter(total__gt=0).order_by('-total')[:10])
+    except DatabaseError:
+        group_rows = list(Transfer.objects.filter(
+            Q(from_user=user) | Q(to_user=user),
+            chat_id__isnull=False,
+        ).values('chat_id').annotate(total=Count('id')).order_by('-total')[:10])
+
+    chats_map = {chat.chat_id: chat for chat in Chat.objects.filter(chat_id__in=[row['chat_id'] for row in group_rows])}
+    groups = [{'chat': chats_map.get(row['chat_id']), 'chat_id': row['chat_id'], 'total': row['total']} for row in group_rows]
 
     return render(request, 'main/user_profile.html', {
         'user': user,
