@@ -186,8 +186,9 @@ def user_profile(request, token):
 
     games = GamePlayer.objects.filter(user=user).select_related('game', 'game__chat').order_by('-joined_at')[:20]
 
+    month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     try:
-        score = _players_score_queryset(GamePlayer.objects.filter(user=user)).aggregate(
+        score = _players_score_queryset(GamePlayer.objects.filter(user=user, game__created_at__gte=month_start)).aggregate(
             total=Coalesce(Sum('delta'), 0)
         )['total'] or 0
     except DatabaseError:

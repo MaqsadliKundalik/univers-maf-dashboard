@@ -6,19 +6,21 @@
     <title>{{ user.full_name|default:user.mention }} - BloodyMafia</title>
     <style>
         :root {
-            --page-top: #f6f3f0;
-            --page-mid: #1b070a;
+            --page-top: #fff7f8;
+            --page-mid: #210208;
             --page-bottom: #040405;
-            --paper: rgba(255, 255, 255, .94);
+            --paper: rgba(255, 255, 255, .96);
             --paper-strong: #ffffff;
-            --ink: #15151a;
-            --muted: #77737a;
-            --line: rgba(72, 14, 19, .13);
-            --blood: #69000b;
-            --blood-2: #9f0715;
-            --blood-soft: rgba(105, 0, 11, .1);
-            --shadow: 0 24px 70px rgba(45, 6, 10, .16), 0 8px 24px rgba(45, 6, 10, .08);
-            --radius: 22px;
+            --ink: #101014;
+            --muted: #6c6670;
+            --line: rgba(128, 0, 20, .16);
+            --blood: #7f0015;
+            --blood-2: #d20a22;
+            --blood-hot: #ff3150;
+            --blood-soft: rgba(210, 10, 34, .12);
+            --plum: #2a0610;
+            --shadow: 0 28px 80px rgba(64, 0, 12, .18), 0 10px 28px rgba(64, 0, 12, .1);
+            --radius: 24px;
         }
 
         * { box-sizing:border-box; }
@@ -28,9 +30,9 @@
             color:var(--ink);
             font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
             background:
-                radial-gradient(circle at 12% 8%, rgba(105,0,11,.16), transparent 18rem),
-                radial-gradient(circle at 90% 22%, rgba(105,0,11,.11), transparent 20rem),
-                linear-gradient(180deg, var(--page-top) 0%, #efe8e4 42%, var(--page-mid) 72%, var(--page-bottom) 100%);
+                radial-gradient(circle at 8% 6%, rgba(255,49,80,.22), transparent 20rem),
+                radial-gradient(circle at 86% 20%, rgba(127,0,21,.18), transparent 22rem),
+                linear-gradient(180deg, var(--page-top) 0%, #fff 28%, #f9eef1 45%, var(--page-mid) 72%, var(--page-bottom) 100%);
             min-height:100vh;
         }
 
@@ -40,9 +42,9 @@
             inset:0;
             pointer-events:none;
             background:
-                linear-gradient(160deg, transparent 0 62%, rgba(70, 0, 8, .16) 62% 63%, transparent 63% 100%),
-                radial-gradient(circle at 4% 36%, rgba(105,0,11,.12) 0 24px, transparent 25px),
-                radial-gradient(circle at 97% 7%, rgba(105,0,11,.14) 0 36px, transparent 37px);
+                linear-gradient(160deg, transparent 0 62%, rgba(127,0,21,.18) 62% 63%, transparent 63% 100%),
+                radial-gradient(circle at 4% 36%, rgba(127,0,21,.13) 0 24px, transparent 25px),
+                radial-gradient(circle at 97% 7%, rgba(210,10,34,.18) 0 36px, transparent 37px);
             mix-blend-mode:multiply;
         }
 
@@ -54,10 +56,10 @@
 
         .profile-hero {
             display:grid;
-            grid-template-columns:minmax(0, 1.25fr) minmax(280px, .75fr);
+            grid-template-columns:minmax(0, 1.35fr) minmax(300px, .65fr);
             gap:18px;
             align-items:stretch;
-            margin-bottom:18px;
+            margin-bottom:20px;
         }
 
         .profile-card,
@@ -73,11 +75,11 @@
         }
 
         .profile-card {
-            min-height:260px;
-            padding:26px;
-            display:flex;
-            align-items:flex-end;
-            gap:22px;
+            min-height:292px;
+            padding:0;
+            display:grid;
+            grid-template-columns:210px minmax(0, 1fr);
+            gap:0;
         }
 
         .profile-card::before {
@@ -85,52 +87,85 @@
             position:absolute;
             inset:0;
             background:
-                linear-gradient(135deg, rgba(105,0,11,.14), transparent 36%),
-                radial-gradient(circle at 90% 10%, rgba(105,0,11,.18), transparent 12rem);
+                linear-gradient(120deg, rgba(255,49,80,.16), transparent 38%),
+                radial-gradient(circle at 86% 18%, rgba(210,10,34,.2), transparent 13rem);
             pointer-events:none;
         }
 
-        .profile-card::after,
-        .section-card::after {
+        .profile-card::after {
             content:"";
             position:absolute;
-            right:-34px;
-            bottom:-42px;
-            width:150px;
-            height:150px;
-            border-radius:50%;
-            background:radial-gradient(circle, rgba(105,0,11,.2) 0 32%, rgba(105,0,11,.08) 33% 48%, transparent 49%);
+            left:0;
+            right:0;
+            bottom:0;
+            height:5px;
+            background:linear-gradient(90deg, var(--blood), var(--blood-hot), var(--blood));
+            pointer-events:none;
+        }
+
+        .avatar-panel {
+            background:
+                radial-gradient(circle at 35% 24%, rgba(255,49,80,.48), transparent 5rem),
+                linear-gradient(145deg, #210208, #7f0015 54%, #190106);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:24px;
+            position:relative;
+        }
+
+        .avatar-panel::after {
+            content:"";
+            position:absolute;
+            inset:16px;
+            border:1px solid rgba(255,255,255,.2);
+            border-radius:20px;
             pointer-events:none;
         }
 
         .avatar-slot {
-            width:116px;
-            height:116px;
-            border-radius:28px;
+            width:132px;
+            height:132px;
+            border-radius:34px;
             background:
-                linear-gradient(145deg, rgba(105,0,11,.92), rgba(28,2,5,.95)),
-                radial-gradient(circle at 35% 25%, rgba(255,255,255,.28), transparent 2.2rem);
-            color:#fff;
+                linear-gradient(145deg, rgba(255,255,255,.94), rgba(255,235,238,.86)),
+                radial-gradient(circle at 35% 25%, rgba(255,49,80,.18), transparent 3rem);
+            color:var(--blood);
             display:flex;
             align-items:center;
             justify-content:center;
-            font-size:2.8rem;
-            font-weight:800;
-            box-shadow:0 16px 42px rgba(105,0,11,.3);
+            font-size:3.4rem;
+            font-weight:900;
+            box-shadow:0 24px 52px rgba(0,0,0,.22), inset 0 0 0 1px rgba(255,255,255,.9);
             z-index:1;
-            flex:0 0 auto;
         }
 
-        .profile-main { z-index:1; min-width:0; }
-        .eyebrow { color:var(--blood); font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em; margin-bottom:8px; }
-        h1 { margin:0; color:#15151a; font-size:clamp(1.8rem, 4.5vw, 3rem); line-height:1.05; overflow-wrap:anywhere; }
+        .profile-main {
+            z-index:1;
+            min-width:0;
+            padding:30px;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+        }
+
+        .eyebrow {
+            color:var(--blood-2);
+            font-size:.76rem;
+            font-weight:900;
+            text-transform:uppercase;
+            letter-spacing:.14em;
+            margin-bottom:10px;
+        }
+
+        h1 { margin:0; color:#101014; font-size:clamp(2rem, 4.5vw, 3.35rem); line-height:1.02; overflow-wrap:anywhere; }
         h2 { margin:0; color:#f8f2ef; font-size:1.05rem; }
         .section-card.light h2 { color:#17171c; }
         .muted { color:var(--muted); }
 
         .badges { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
-        .badge { border:1px solid rgba(105,0,11,.14); border-radius:999px; padding:6px 11px; color:#5f5860; background:rgba(255,255,255,.7); font-size:.84rem; }
-        .badge.red { color:#71020d; border-color:rgba(105,0,11,.22); background:rgba(105,0,11,.07); }
+        .badge { border:1px solid rgba(127,0,21,.18); border-radius:999px; padding:7px 12px; color:#514b54; background:rgba(255,255,255,.78); font-size:.84rem; box-shadow:0 6px 16px rgba(127,0,21,.05); }
+        .badge.red { color:var(--blood); border-color:rgba(210,10,34,.25); background:rgba(210,10,34,.08); }
         .badge.green { color:#176c49; border-color:rgba(23,108,73,.2); background:rgba(23,108,73,.08); }
 
         .metrics-panel {
@@ -138,28 +173,88 @@
             display:grid;
             grid-template-columns:1fr 1fr;
             gap:12px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,246,247,.94));
         }
 
         .metric {
-            background:linear-gradient(180deg, #fff, #f8f3ef);
-            border:1px solid rgba(105,0,11,.11);
+            background:linear-gradient(180deg, #fff, #fff4f6);
+            border:1px solid rgba(127,0,21,.13);
             border-radius:18px;
             padding:16px;
+            box-shadow:0 12px 24px rgba(127,0,21,.06);
         }
 
-        .value { font-size:1.55rem; font-weight:850; line-height:1; color:#17171c; }
-        .label { color:var(--muted); font-size:.78rem; margin-top:7px; }
+        .metric-label,
+        .item-title,
+        .transfer-type,
+        .result-pill {
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+        }
+
+        .mini-icon {
+            width:20px;
+            height:20px;
+            border-radius:8px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            background:rgba(210,10,34,.11);
+            color:var(--blood-2);
+            flex:0 0 auto;
+            position:relative;
+        }
+
+        .mini-icon::before {
+            content:"";
+            width:8px;
+            height:8px;
+            border-radius:50%;
+            background:currentColor;
+            box-shadow:0 0 0 3px rgba(210,10,34,.08);
+        }
+
+        .mini-icon.gem::before { transform:rotate(45deg); border-radius:2px; }
+        .mini-icon.win::before { width:10px; height:6px; border-radius:2px 2px 7px 7px; }
+        .mini-icon.game::before { width:11px; height:7px; border-radius:4px; }
+        .mini-icon.shield::before { width:9px; height:11px; border-radius:7px 7px 4px 4px; }
+        .mini-icon.doc::before { width:8px; height:11px; border-radius:2px; }
+        .mini-icon.weapon::before { width:12px; height:3px; border-radius:2px; transform:rotate(-25deg); }
+        .mini-icon.mask::before { width:12px; height:7px; border-radius:8px; }
+
+        .status-pill,
+        .result-pill {
+            border-radius:999px;
+            padding:4px 9px;
+            font-size:.72rem;
+            font-weight:800;
+            background:rgba(210,10,34,.1);
+            color:var(--blood);
+        }
+
+        .status-pill.off,
+        .result-pill.lose {
+            background:rgba(21,21,26,.08);
+            color:#5f5b60;
+        }
+
+        .value { font-size:1.72rem; font-weight:900; line-height:1; color:#111014; }
+        .label { color:var(--muted); font-size:.78rem; margin-top:8px; }
 
         .section {
             margin-top:18px;
             padding:1px;
             border-radius:calc(var(--radius) + 1px);
-            background:linear-gradient(135deg, rgba(105,0,11,.22), rgba(255,255,255,.22), rgba(105,0,11,.1));
+            background:linear-gradient(135deg, rgba(210,10,34,.36), rgba(255,255,255,.34), rgba(127,0,21,.18));
         }
 
         .section-card {
             padding:20px;
-            background:rgba(18, 17, 19, .78);
+            background:
+                linear-gradient(145deg, rgba(33,2,8,.92), rgba(9,9,11,.9)),
+                radial-gradient(circle at 94% 8%, rgba(255,49,80,.2), transparent 14rem);
             color:#f8f2ef;
             box-shadow:0 24px 70px rgba(0,0,0,.18);
         }
@@ -184,7 +279,7 @@
 
         .items { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; position:relative; z-index:1; }
         .item {
-            background:rgba(255,255,255,.9);
+            background:rgba(255,255,255,.96);
             color:#1b1a1e;
             border:1px solid rgba(105,0,11,.1);
             border-radius:16px;
@@ -212,12 +307,14 @@
 
         @media (max-width:860px) {
             .profile-hero { grid-template-columns:1fr; }
-            .profile-card { min-height:220px; align-items:flex-start; flex-direction:column; }
+            .profile-card { grid-template-columns:1fr; min-height:0; }
+            .avatar-panel { min-height:180px; }
         }
 
         @media (max-width:640px) {
             .wrap { width:min(100% - 22px, 1120px); padding-top:22px; }
-            .avatar-slot { width:92px; height:92px; border-radius:22px; font-size:2.1rem; }
+            .profile-main { padding:22px; }
+            .avatar-slot { width:104px; height:104px; border-radius:26px; font-size:2.6rem; }
             .metrics-panel,.items,.two { grid-template-columns:1fr; }
             .row { align-items:flex-start; }
         }
@@ -227,7 +324,9 @@
     <main class="wrap">
         <section class="profile-hero">
             <div class="profile-card">
-                <div class="avatar-slot">{{ user.full_name|default:user.mention|striptags|slice:":1"|upper }}</div>
+                <div class="avatar-panel">
+                    <div class="avatar-slot">{{ user.full_name|default:user.mention|striptags|slice:":1"|upper }}</div>
+                </div>
                 <div class="profile-main">
                     <div class="eyebrow">BloodyMafia Profile</div>
                     <h1>{{ user.full_name|default:user.mention|striptags }}</h1>
@@ -235,16 +334,16 @@
                     <div class="badges">
                         {% if is_vip %}<span class="badge green">VIP</span>{% endif %}
                         {% if is_blocked %}<span class="badge red">Bloklangan</span>{% endif %}
-                        <span class="badge">Umumiy ball: {{ score }}</span>
+                        <span class="badge">Shu oy ball: {{ score }}</span>
                     </div>
                 </div>
             </div>
 
             <div class="metrics-panel">
-                <div class="metric"><div class="value">{{ profile.dollar|default:0 }}</div><div class="label">Dollar</div></div>
-                <div class="metric"><div class="value">{{ profile.diamond|default:0 }}</div><div class="label">Diamond</div></div>
-                <div class="metric"><div class="value">{{ profile.wins|default:0 }}</div><div class="label">G'alaba</div></div>
-                <div class="metric"><div class="value">{{ profile.games_count|default:0 }}</div><div class="label">O'yinlar</div></div>
+                <div class="metric"><div class="value">{{ profile.dollar|default:0 }}</div><div class="label metric-label"><span class="mini-icon money"></span>Dollar</div></div>
+                <div class="metric"><div class="value">{{ profile.diamond|default:0 }}</div><div class="label metric-label"><span class="mini-icon gem"></span>Diamond</div></div>
+                <div class="metric"><div class="value">{{ profile.wins|default:0 }}</div><div class="label metric-label"><span class="mini-icon win"></span>G'alaba</div></div>
+                <div class="metric"><div class="value">{{ profile.games_count|default:0 }}</div><div class="label metric-label"><span class="mini-icon game"></span>O'yinlar</div></div>
             </div>
         </section>
 
@@ -256,15 +355,15 @@
                     <div class="section-label">statuslar</div>
                 </div>
                 <div class="items">
-                    <div class="item"><span>Himoya</span><strong>{{ profile.himoya }} {% if profile.on_himoya %}ON{% else %}OFF{% endif %}</strong></div>
-                    <div class="item"><span>Hujjat</span><strong>{{ profile.hujjat }} {% if profile.on_hujjat %}ON{% else %}OFF{% endif %}</strong></div>
-                    <div class="item"><span>Miltiq</span><strong>{{ profile.miltiq }} {% if profile.on_miltiq %}ON{% else %}OFF{% endif %}</strong></div>
-                    <div class="item"><span>Maska</span><strong>{{ profile.maska }} {% if profile.on_maska %}ON{% else %}OFF{% endif %}</strong></div>
-                    <div class="item"><span>Qotildan himoya</span><strong>{{ profile.qotildan_himoya }} {% if profile.on_qotildan_himoya %}ON{% else %}OFF{% endif %}</strong></div>
-                    <div class="item"><span>Doridan himoya</span><strong>{{ profile.doridan_himoya }} {% if profile.on_doridan_himoya %}ON{% else %}OFF{% endif %}</strong></div>
-                    <div class="item"><span>Osishdan himoya</span><strong>{{ profile.osishdan_himoya }} {% if profile.on_osishdan_himoya %}ON{% else %}OFF{% endif %}</strong></div>
-                    <div class="item"><span>Slip himoya</span><strong>{{ profile.slip_himoya }} {% if profile.on_slip_himoya %}ON{% else %}OFF{% endif %}</strong></div>
-                    <div class="item"><span>Geroy himoya</span><strong>{{ profile.geroy_himoya }} {% if profile.on_geroy_himoya %}ON{% else %}OFF{% endif %}</strong></div>
+                    <div class="item"><span class="item-title"><span class="mini-icon shield"></span>Himoya</span><strong>{{ profile.himoya }} <span class="status-pill {% if not profile.on_himoya %}off{% endif %}">{% if profile.on_himoya %}ON{% else %}OFF{% endif %}</span></strong></div>
+                    <div class="item"><span class="item-title"><span class="mini-icon doc"></span>Hujjat</span><strong>{{ profile.hujjat }} <span class="status-pill {% if not profile.on_hujjat %}off{% endif %}">{% if profile.on_hujjat %}ON{% else %}OFF{% endif %}</span></strong></div>
+                    <div class="item"><span class="item-title"><span class="mini-icon weapon"></span>Miltiq</span><strong>{{ profile.miltiq }} <span class="status-pill {% if not profile.on_miltiq %}off{% endif %}">{% if profile.on_miltiq %}ON{% else %}OFF{% endif %}</span></strong></div>
+                    <div class="item"><span class="item-title"><span class="mini-icon mask"></span>Maska</span><strong>{{ profile.maska }} <span class="status-pill {% if not profile.on_maska %}off{% endif %}">{% if profile.on_maska %}ON{% else %}OFF{% endif %}</span></strong></div>
+                    <div class="item"><span class="item-title"><span class="mini-icon shield"></span>Qotildan himoya</span><strong>{{ profile.qotildan_himoya }} <span class="status-pill {% if not profile.on_qotildan_himoya %}off{% endif %}">{% if profile.on_qotildan_himoya %}ON{% else %}OFF{% endif %}</span></strong></div>
+                    <div class="item"><span class="item-title"><span class="mini-icon shield"></span>Doridan himoya</span><strong>{{ profile.doridan_himoya }} <span class="status-pill {% if not profile.on_doridan_himoya %}off{% endif %}">{% if profile.on_doridan_himoya %}ON{% else %}OFF{% endif %}</span></strong></div>
+                    <div class="item"><span class="item-title"><span class="mini-icon shield"></span>Osishdan himoya</span><strong>{{ profile.osishdan_himoya }} <span class="status-pill {% if not profile.on_osishdan_himoya %}off{% endif %}">{% if profile.on_osishdan_himoya %}ON{% else %}OFF{% endif %}</span></strong></div>
+                    <div class="item"><span class="item-title"><span class="mini-icon shield"></span>Slip himoya</span><strong>{{ profile.slip_himoya }} <span class="status-pill {% if not profile.on_slip_himoya %}off{% endif %}">{% if profile.on_slip_himoya %}ON{% else %}OFF{% endif %}</span></strong></div>
+                    <div class="item"><span class="item-title"><span class="mini-icon shield"></span>Geroy himoya</span><strong>{{ profile.geroy_himoya }} <span class="status-pill {% if not profile.on_geroy_himoya %}off{% endif %}">{% if profile.on_geroy_himoya %}ON{% else %}OFF{% endif %}</span></strong></div>
                 </div>
             </div>
         </section>
@@ -280,13 +379,13 @@
                     <div>
                         <div class="section-label">Yuborilgan</div>
                         {% for t in transfers_sent %}
-                        <div class="row"><div class="name">{{ t.to_user.full_name|default:t.to_user.mention|striptags }}<div class="section-label">{{ t.created_at|date:"d.m.Y H:i" }}</div></div><strong>{{ t.amount }} {{ t.type }}</strong></div>
+                        <div class="row"><div class="name">{{ t.to_user.full_name|default:t.to_user.mention|striptags }}<div class="section-label">{{ t.created_at|date:"d.m.Y H:i" }}</div></div><strong><span class="transfer-type"><span class="mini-icon {% if t.type == 'diamond' %}gem{% else %}money{% endif %}"></span>{{ t.amount }} {{ t.type }}</span></strong></div>
                         {% empty %}<p class="section-label">Transfer yo'q.</p>{% endfor %}
                     </div>
                     <div>
                         <div class="section-label">Qabul qilingan</div>
                         {% for t in transfers_received %}
-                        <div class="row"><div class="name">{{ t.from_user.full_name|default:t.from_user.mention|striptags }}<div class="section-label">{{ t.created_at|date:"d.m.Y H:i" }}</div></div><strong>{{ t.amount }} {{ t.type }}</strong></div>
+                        <div class="row"><div class="name">{{ t.from_user.full_name|default:t.from_user.mention|striptags }}<div class="section-label">{{ t.created_at|date:"d.m.Y H:i" }}</div></div><strong><span class="transfer-type"><span class="mini-icon {% if t.type == 'diamond' %}gem{% else %}money{% endif %}"></span>{{ t.amount }} {{ t.type }}</span></strong></div>
                         {% empty %}<p class="section-label">Transfer yo'q.</p>{% endfor %}
                     </div>
                 </div>
@@ -305,7 +404,7 @@
                         {% for gp in games %}
                         <div class="row">
                             <div class="name">{{ gp.game.chat.title }}<div class="muted">{{ gp.role }} | {{ gp.game.created_at|date:"d.m.Y H:i" }}</div></div>
-                            <strong>{% if gp.win %}Win{% else %}Lose{% endif %}</strong>
+                            <strong><span class="result-pill {% if not gp.win %}lose{% endif %}">{% if gp.win %}Win{% else %}Lose{% endif %}</span></strong>
                         </div>
                         {% empty %}<p class="muted">O'yinlar topilmadi.</p>{% endfor %}
                     </div>
