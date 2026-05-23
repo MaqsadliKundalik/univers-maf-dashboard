@@ -22,6 +22,8 @@ from bot.models import (
     Transfer,
     User,
     VipUser,
+    ActiveRole,
+    XCoinWallet,
 )
 from .models import GroupStatsLink, UserProfileLink
 
@@ -178,7 +180,9 @@ def user_profile(request, token):
 
     user = link.user
     profile = Profile.objects.filter(user=user).first()
+    xcoin_wallet = XCoinWallet.objects.filter(user=user).first()
     geroy = Geroy.objects.filter(user=user).first()
+    active_roles = ActiveRole.objects.filter(profile=profile, is_active=True).order_by('-created_at') if profile else []
     is_vip = VipUser.objects.filter(user=user).exists()
     is_blocked = BlockedUser.objects.filter(user=user).exists()
     pairs = Para.objects.filter(Q(user1=user) | Q(user2=user)).select_related('user1', 'user2')[:10]
@@ -213,7 +217,9 @@ def user_profile(request, token):
     return render(request, 'main/user_profile.html', {
         'user': user,
         'profile': profile,
+        'xcoin_wallet': xcoin_wallet,
         'geroy': geroy,
+        'active_roles': active_roles,
         'is_vip': is_vip,
         'is_blocked': is_blocked,
         'pairs': pairs,

@@ -232,6 +232,26 @@
         .mini-icon.doc::before { width:8px; height:11px; border-radius:2px; }
         .mini-icon.weapon::before { width:12px; height:3px; border-radius:2px; transform:rotate(-25deg); }
         .mini-icon.mask::before { width:12px; height:7px; border-radius:8px; }
+        .mini-icon.xcoin::before {
+            width:10px;
+            height:10px;
+            border-radius:50%;
+            box-shadow:
+                0 0 0 3px rgba(210,10,34,.08),
+                inset 0 0 0 3px rgba(255,255,255,.65);
+        }
+        .mini-icon.target::before {
+            width:12px;
+            height:12px;
+            border-radius:50%;
+            background:radial-gradient(circle, currentColor 0 2px, transparent 3px 5px, currentColor 6px);
+        }
+        .mini-icon.role::before {
+            width:11px;
+            height:13px;
+            border-radius:2px;
+            transform:rotate(8deg);
+        }
 
         .asset-icon {
             width:42px;
@@ -503,8 +523,10 @@
             <div class="metrics-panel">
                 <div class="metric"><div class="value">{{ profile.dollar|default:0 }}</div><div class="label metric-label"><span class="mini-icon money"></span>Dollar</div></div>
                 <div class="metric"><div class="value">{{ profile.diamond|default:0 }}</div><div class="label metric-label"><span class="mini-icon gem"></span>Olmos</div></div>
-                <div class="metric"><div class="value">{{ profile.wins|default:0 }}</div><div class="label metric-label"><span class="mini-icon win"></span>G'alaba</div></div>
-                <div class="metric"><div class="value">{{ profile.games_count|default:0 }}</div><div class="label metric-label"><span class="mini-icon game"></span>O'yinlar</div></div>
+                <div class="metric"><div class="value">{{ xcoin_wallet.xcoin|default:0 }}</div><div class="label metric-label"><span class="mini-icon xcoin"></span>XCoin</div></div>
+                <div class="metric"><div class="value">{{ profile.wins|default:0 }}</div><div class="label metric-label"><span class="mini-icon target"></span>G'alaba</div></div>
+                <div class="metric"><div class="value">{{ profile.games_count|default:0 }}</div><div class="label metric-label"><span class="mini-icon game"></span>Barcha o'yinlar</div></div>
+                <div class="metric"><div class="value">{{ active_roles|length }}</div><div class="label metric-label"><span class="mini-icon role"></span>Faol rollar</div></div>
             </div>
         </section>
 
@@ -518,12 +540,7 @@
                 <div class="items">
                     <div class="item"><span class="item-title"><span class="mini-icon shield"></span>Himoya</span><strong>{{ profile.himoya }} <span class="status-pill {% if not profile.on_himoya %}off{% endif %}">{% if profile.on_himoya %}ON{% else %}OFF{% endif %}</span></strong></div>
                     <div class="item"><span class="item-title"><span class="mini-icon doc"></span>Hujjat</span><strong>{{ profile.hujjat }} <span class="status-pill {% if not profile.on_hujjat %}off{% endif %}">{% if profile.on_hujjat %}ON{% else %}OFF{% endif %}</span></strong></div>
-                    <div class="item"><span class="item-title"><span class="mini-icon weapon"></span>Miltiq</span><strong>{{ profile.miltiq }} <span class="status-pill {% if not profile.on_miltiq %}off{% endif %}">{% if profile.on_miltiq %}ON{% else %}OFF{% endif %}</span></strong></div>
-                    <div class="item"><span class="item-title"><span class="mini-icon mask"></span>Maska</span><strong>{{ profile.maska }} <span class="status-pill {% if not profile.on_maska %}off{% endif %}">{% if profile.on_maska %}ON{% else %}OFF{% endif %}</span></strong></div>
-                    <div class="item"><span class="item-title"><span class="mini-icon shield"></span>Qotildan himoya</span><strong>{{ profile.qotildan_himoya }} <span class="status-pill {% if not profile.on_qotildan_himoya %}off{% endif %}">{% if profile.on_qotildan_himoya %}ON{% else %}OFF{% endif %}</span></strong></div>
-                    <div class="item"><span class="item-title"><span class="mini-icon shield"></span>Doridan himoya</span><strong>{{ profile.doridan_himoya }} <span class="status-pill {% if not profile.on_doridan_himoya %}off{% endif %}">{% if profile.on_doridan_himoya %}ON{% else %}OFF{% endif %}</span></strong></div>
                     <div class="item"><span class="item-title"><span class="mini-icon shield"></span>Osishdan himoya</span><strong>{{ profile.osishdan_himoya }} <span class="status-pill {% if not profile.on_osishdan_himoya %}off{% endif %}">{% if profile.on_osishdan_himoya %}ON{% else %}OFF{% endif %}</span></strong></div>
-                    <div class="item"><span class="item-title"><span class="mini-icon shield"></span>Slip himoya</span><strong>{{ profile.slip_himoya }} <span class="status-pill {% if not profile.on_slip_himoya %}off{% endif %}">{% if profile.on_slip_himoya %}ON{% else %}OFF{% endif %}</span></strong></div>
                     <div class="item"><span class="item-title"><span class="mini-icon shield"></span>Geroy himoya</span><strong>{{ profile.geroy_himoya }} <span class="status-pill {% if not profile.on_geroy_himoya %}off{% endif %}">{% if profile.on_geroy_himoya %}ON{% else %}OFF{% endif %}</span></strong></div>
                 </div>
             </div>
@@ -575,6 +592,15 @@
                     <div class="section-label">o'yinlar va guruhlar</div>
                 </div>
                 <div class="two">
+                    <div>
+                        <div class="section-label">Faol rollar</div>
+                        {% for active_role in active_roles %}
+                        <div class="row">
+                            <div class="name"><span class="item-title"><span class="mini-icon role"></span>{{ active_role.role }}</span></div>
+                            <span class="section-label">active</span>
+                        </div>
+                        {% empty %}<p class="muted">Yo'q</p>{% endfor %}
+                    </div>
                     <div>
                         <div class="section-label">So'nggi o'yinlar</div>
                         {% for gp in games %}

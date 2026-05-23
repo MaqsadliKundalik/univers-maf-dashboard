@@ -75,6 +75,20 @@ class ActiveRole(models.Model):
         return f"{self.role} - {self.profile}"
 
 
+class XCoinWallet(models.Model):
+    user = models.ForeignKey(User, related_name="xcoin_wallet", on_delete=models.CASCADE)
+    xcoin = models.BigIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "xcoinwallet"
+        managed = False
+
+    def __str__(self):
+        return f"XCoin: {self.user} - {self.xcoin}"
+
+
 class Transfer(models.Model):
     id = models.BigAutoField(primary_key=True)
     from_user = models.ForeignKey(User, related_name="transfers_from", on_delete=models.CASCADE)
