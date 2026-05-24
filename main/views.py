@@ -160,6 +160,7 @@ def group_stats(request, token):
 
     if request.method == 'POST':
         action = request.POST.get('action')
+        response = {'ok': False, 'action': action}
         try:
             if action == 'set_mode':
                 mode = request.POST.get('mode')
@@ -167,6 +168,7 @@ def group_stats(request, token):
                     mode_set, _ = GameModeSet.objects.get_or_create(chat_id=chat.chat_id)
                     mode_set.mode_name = mode
                     mode_set.save(update_fields=['mode_name'])
+                    response.update({'ok': True, 'mode': mode})
             elif action == 'set_command':
                 command = request.POST.get('command')
                 permission = request.POST.get('permission')
@@ -187,6 +189,7 @@ def group_stats(request, token):
                     )
                     setattr(perms, f'{command}_cmd', permission)
                     perms.save(update_fields=[f'{command}_cmd'])
+                    response.update({'ok': True, 'command': command, 'permission': permission})
             elif action == 'set_role':
                 role = request.POST.get('role')
                 enabled = request.POST.get('enabled') == '1'
@@ -199,9 +202,12 @@ def group_stats(request, token):
                         banned.add(role)
                     role_set.blacklist = ",".join(sorted(banned))
                     role_set.save(update_fields=['blacklist'])
+                    response.update({'ok': True, 'role': role, 'enabled': enabled})
             cache.delete(f'group_settings_{chat.chat_id}')
         except Exception:
-            pass
+            response.update({'ok': False})
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse(response, status=200 if response['ok'] else 400)
 
     now = timezone.now()
     if days == 1:
@@ -274,23 +280,23 @@ def group_stats(request, token):
     transfer_history = []
     if section == 'transfers':
         try:
-            incomes_qs = GroupIncome.objects.filter(
+            transfers_qs = Transfer.objects.filter(
                 chat_id=chat.chat_id,
                 created_at__gte=start_date,
-            ).order_by('-created_at')
-            transfer_history_page = Paginator(incomes_qs, 20).get_page(request.GET.get('transfers_page'))
-            recent_incomes = list(transfer_history_page)
+            ).select_related('from_user', 'to_user').order_by('-created_at')
+            transfer_history_page = Paginator(transfers_qs, 20).get_page(request.GET.get('transfers_page'))
+            recent_transfers = list(transfer_history_page)
         except Exception:
-            recent_incomes = []
+            recent_transfers = []
             transfer_history_page = Paginator([], 20).get_page(1)
 
-        users_map = {u.user_id: u for u in User.objects.filter(user_id__in=[inc.user_id for inc in recent_incomes])}
-        for inc in recent_incomes:
-            u = users_map.get(inc.user_id)
+        for transfer in recent_transfers:
             transfer_history.append({
-                'user': u.full_name if u and u.full_name else (u.mention if u else f"ID: {inc.user_id}"),
-                'amount': inc.amount,
-                'created_at': inc.created_at,
+                'from_user': transfer.from_user.full_name or transfer.from_user.mention,
+                'to_user': transfer.to_user.full_name or transfer.to_user.mention,
+                'amount': transfer.amount,
+                'type': transfer.type,
+                'created_at': transfer.created_at,
             })
 
     try:

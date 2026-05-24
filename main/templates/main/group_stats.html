@@ -228,11 +228,19 @@
         .segmented { display:flex; flex-wrap:wrap; gap:8px; }
         .setting-option { border:1px solid rgba(127,0,21,.14); border-radius:999px; padding:8px 11px; background:#fff; color:#4f4850; font-weight:800; cursor:pointer; }
         .setting-option.active { background:linear-gradient(135deg,var(--blood),var(--blood-2)); color:#fff; border-color:transparent; }
+        .setting-option:disabled,
+        .switch:disabled { opacity:.68; cursor:wait; }
         .role-grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
         .role-row { display:flex; justify-content:space-between; gap:10px; align-items:center; border:1px solid rgba(127,0,21,.12); border-radius:14px; padding:9px 10px; background:#fff; }
         .role-row span { overflow-wrap:anywhere; font-weight:700; }
         .switch { border:0; border-radius:999px; padding:6px 10px; color:#fff; background:linear-gradient(135deg,var(--blood),var(--blood-2)); font-weight:900; cursor:pointer; }
         .switch.off { background:#70666b; }
+        .settings-save-state { margin-left:auto; min-height:20px; color:var(--muted); font-size:.78rem; font-weight:800; }
+        .settings-save-state.saving::before { content:""; width:11px; height:11px; border-radius:50%; border:2px solid rgba(127,0,21,.18); border-top-color:var(--blood-2); display:inline-block; margin-right:7px; vertical-align:-2px; animation:spin .7s linear infinite; }
+        .settings-save-state.done { color:#176c49; }
+        .settings-save-state.error { color:var(--blood); }
+        .setting-card.is-saving { box-shadow:0 10px 24px rgba(45,6,10,.06), inset 0 0 0 1px rgba(210,10,34,.18); }
+        @keyframes spin { to { transform:rotate(360deg); } }
 
         @media (max-width:860px) {
             .group-hero { grid-template-columns:1fr; }
@@ -373,13 +381,13 @@
                     <div class="transfer-card">
                         <span class="asset-icon" aria-label="olmos"></span>
                         <div class="name">
-                            <strong>{{ transfer.user }}</strong>
-                            <div class="section-label">{{ transfer.created_at|date:"d.m.Y H:i" }}</div>
+                            <strong>{{ transfer.from_user|striptags }} → {{ transfer.to_user|striptags }}</strong>
+                            <div class="section-label">{{ transfer.created_at|date:"d.m.Y H:i" }} | {% if transfer.type == 'diamond' %}Olmos{% elif transfer.type == 'dollar' %}Dollar{% elif transfer.type == 'xcoin' %}XCoin{% else %}{{ transfer.type }}{% endif %}</div>
                         </div>
                         <div class="transfer-amount">{{ transfer.amount }}</div>
                     </div>
                     {% empty %}
-                    <p class="section-label">Hali guruhga olmos o'tkazilmagan.</p>
+                    <p class="section-label">Hali guruhda o'tkazma yo'q.</p>
                     {% endfor %}
                 </div>
                 <div class="pager">
@@ -396,14 +404,14 @@
             <div class="section-card light">
                 <div class="section-head">
                     <h2>O'yin sozlamalari</h2>
-                    <div class="section-label">botdagi sozlamalar bilan bir xil</div>
+                    <div class="settings-save-state" id="settings-save-state"></div>
                 </div>
                 <div class="settings-grid">
                     <div class="setting-card wide">
                         <h3>O'yin modi</h3>
                         <div class="segmented">
                             {% for mode in game_modes %}
-                            <form method="post">
+                            <form method="post" class="js-setting-form" data-kind="mode">
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="set_mode">
                                 <input type="hidden" name="mode" value="{{ mode }}">
@@ -417,7 +425,7 @@
                         <h3>Rollarni o'chirib-yoqish</h3>
                         <div class="role-grid">
                             {% for role in settings_data.roles %}
-                            <form method="post" class="role-row">
+                            <form method="post" class="role-row js-setting-form" data-kind="role">
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="set_role">
                                 <input type="hidden" name="role" value="{{ role.name }}">
@@ -435,11 +443,11 @@
                             {% for command in settings_data.commands %}
                             <div class="role-row">
                                 <span>{{ command.label }}</span>
-                                <form method="post">
+                                <form method="post" class="js-setting-form" data-kind="command">
                                     {% csrf_token %}
                                     <input type="hidden" name="action" value="set_command">
                                     <input type="hidden" name="command" value="{{ command.key }}">
-                                    <select class="setting-option" name="permission" onchange="this.form.submit()">
+                                    <select class="setting-option js-auto-submit" name="permission">
                                         {% for option in command_options %}
                                         <option value="{{ option }}" {% if command.permission == option %}selected{% endif %}>{{ option }}</option>
                                         {% endfor %}
@@ -454,5 +462,81 @@
         </section>
         {% endif %}
     </main>
+    <script>
+        (() => {
+            const statusEl = document.getElementById("settings-save-state");
+            const forms = document.querySelectorAll(".js-setting-form");
+            if (!statusEl || !forms.length) return;
+
+            let timer = null;
+            const setStatus = (text, state) => {
+                clearTimeout(timer);
+                statusEl.className = `settings-save-state ${state || ""}`.trim();
+                statusEl.textContent = text;
+                if (state === "done") {
+                    timer = setTimeout(() => {
+                        statusEl.className = "settings-save-state";
+                        statusEl.textContent = "";
+                    }, 1600);
+                }
+            };
+
+            const setBusy = (form, busy) => {
+                const card = form.closest(".setting-card") || form.closest(".role-row");
+                const controls = form.querySelectorAll("button, select");
+                if (card) card.classList.toggle("is-saving", busy);
+                controls.forEach((control) => { control.disabled = busy; });
+            };
+
+            const submitForm = async (form) => {
+                setBusy(form, true);
+                setStatus("Saqlanmoqda...", "saving");
+                try {
+                    const response = await fetch(window.location.href, {
+                        method: "POST",
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest",
+                            "Accept": "application/json",
+                        },
+                        body: new FormData(form),
+                    });
+                    const data = await response.json();
+                    if (!response.ok || !data.ok) throw new Error("save-failed");
+
+                    if (data.action === "set_mode") {
+                        document.querySelectorAll('form[data-kind="mode"] .setting-option').forEach((button) => {
+                            button.classList.toggle("active", button.closest("form").querySelector('[name="mode"]').value === data.mode);
+                        });
+                    }
+
+                    if (data.action === "set_role") {
+                        const enabledInput = form.querySelector('[name="enabled"]');
+                        const button = form.querySelector(".switch");
+                        enabledInput.value = data.enabled ? "0" : "1";
+                        button.classList.toggle("off", !data.enabled);
+                        button.textContent = data.enabled ? "ON" : "OFF";
+                    }
+
+                    setStatus("Saqlandi", "done");
+                } catch (error) {
+                    setStatus("Saqlanmadi", "error");
+                    setTimeout(() => setStatus("", ""), 1800);
+                } finally {
+                    setBusy(form, false);
+                }
+            };
+
+            forms.forEach((form) => {
+                form.addEventListener("submit", (event) => {
+                    event.preventDefault();
+                    submitForm(form);
+                });
+            });
+
+            document.querySelectorAll(".js-auto-submit").forEach((select) => {
+                select.addEventListener("change", () => submitForm(select.form));
+            });
+        })();
+    </script>
 </body>
 </html>
