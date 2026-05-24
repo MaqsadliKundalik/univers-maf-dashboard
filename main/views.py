@@ -150,6 +150,8 @@ def group_stats(request, token):
     section = request.GET.get('section', 'overview')
     if section not in {'overview', 'rating', 'transfers', 'settings'}:
         section = 'overview'
+    if section == 'overview':
+        section = 'settings'
 
     try:
         days = int(request.GET.get('days', 30))
@@ -222,27 +224,7 @@ def group_stats(request, token):
     else:
         start_date = now - timedelta(days=90)
         stats_period_label = "So'nggi 90 kun"
-    stats = cache.get(f'group_overview_{chat.chat_id}_{days}')
-    if not stats:
-        try:
-            group_games = Game.objects.filter(chat=chat, created_at__gte=start_date)
-            players_period = GamePlayer.objects.filter(game__chat=chat, game__created_at__gte=start_date)
-            total_diamond = GroupIncome.objects.filter(
-                chat_id=chat.chat_id,
-                created_at__gte=start_date,
-            ).aggregate(Sum('amount'))['amount__sum'] or 0
-            stats = {
-                'games_count': group_games.count(),
-                'participants_count': players_period.values('user_id').distinct().count(),
-                'total_diamond': total_diamond,
-            }
-        except Exception:
-            stats = {
-                'games_count': 0,
-                'participants_count': 0,
-                'total_diamond': 0,
-            }
-        cache.set(f'group_overview_{chat.chat_id}_{days}', stats, 900)
+    stats = {'games_count': 0, 'participants_count': 0, 'total_diamond': 0}
 
     top_players_page = Paginator([], 20).get_page(1)
     if section == 'rating':
@@ -357,7 +339,6 @@ def group_stats(request, token):
         'chat': chat,
         'stats': stats,
         'top_players': top_players_page,
-        'total_diamond': stats['total_diamond'],
         'transfer_history': transfer_history,
         'transfer_history_page': transfer_history_page,
         'stats_period_label': stats_period_label,

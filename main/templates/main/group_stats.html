@@ -270,7 +270,6 @@
                     <h1>{{ chat.title }}</h1>
                     <div class="muted" style="margin-top:8px">{{ chat.type|title }} | {{ stats_period_label }} statistikasi</div>
                     <nav class="tabs">
-                        <a href="?section=overview&days={{ days }}" class="{% if section == 'overview' %}active{% endif %}">Hisob</a>
                         <a href="?section=rating&days={{ days }}" class="{% if section == 'rating' %}active{% endif %}">Reyting</a>
                         <a href="?section=transfers&days={{ days }}" class="{% if section == 'transfers' %}active{% endif %}">O'tkazmalar</a>
                         <a href="?section=settings&days={{ days }}" class="{% if section == 'settings' %}active{% endif %}">Sozlamalar</a>
@@ -285,8 +284,6 @@
             </div>
 
             <div class="metrics-panel">
-                <div class="metric"><div class="value">{{ stats.participants_count }}</div><div class="label"><span class="mini-icon rank"></span>Ishtirokchilar</div></div>
-                <div class="metric"><div class="value">{{ stats.games_count }}</div><div class="label"><span class="mini-icon game"></span>O'yinlar</div></div>
                 <div class="metric"><div class="value">{{ group_account.balance }}</div><div class="label"><span class="mini-icon wallet"></span>Guruh balansi</div></div>
                 <div class="metric">
                     <div class="value">
@@ -303,38 +300,8 @@
                     </div>
                     <div class="label" style="margin-top:5px">{{ group_account.subscription_price }} olmos / {{ group_account.subscription_duration_days }} kun</div>
                 </div>
-                <div class="metric"><div class="value">{{ total_diamond }}</div><div class="label"><span class="mini-icon gem"></span>30 kunlik olmos kirimi</div></div>
             </div>
         </section>
-
-        {% if section == 'overview' %}
-        <section class="section">
-            <div class="section-card light">
-                <div class="section-head">
-                    <h2>Hisob holati</h2>
-                    <div class="section-label">tez ochiladigan umumiy ko'rinish</div>
-                </div>
-                <div class="leader-list">
-                    <div class="leader-card">
-                        <div class="rank"><span class="mini-icon wallet"></span></div>
-                        <div class="name">
-                            <strong>Guruh balansi</strong>
-                            <div class="muted">Obuna uchun ishlatiladigan qolgan olmos</div>
-                        </div>
-                        <div class="stats"><div class="stat"><strong>{{ group_account.balance }}</strong><div class="muted">olmos</div></div></div>
-                    </div>
-                    <div class="leader-card">
-                        <div class="rank"><span class="mini-icon calendar"></span></div>
-                        <div class="name">
-                            <strong>Obuna muddati</strong>
-                            <div class="muted">{{ group_account.subscription_price }} olmos / {{ group_account.subscription_duration_days }} kun</div>
-                        </div>
-                        <div class="stats"><div class="stat"><strong>{% if group_account.subscription_expires_at %}{{ group_account.subscription_expires_at|date:"d.m.Y" }}{% else %}-{% endif %}</strong><div class="muted">{{ group_account.subscription_status }}</div></div></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        {% endif %}
 
         {% if section == 'rating' %}
         <section class="section" id="rating">
