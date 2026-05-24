@@ -1,0 +1,119 @@
+{% extends 'bot/base.html' %}
+{% block title %}Group ownerlar - MafiaDash{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+        <div>
+            <h1><i class="bi bi-person-gear me-2" style="color:#5288c1"></i>Group ownerlar</h1>
+            <p>Guruh egalariga login-parol berish va ruxsat holatini boshqarish</p>
+        </div>
+        <a href="{% url 'group_owner_create' %}" class="tg-btn" style="display:flex;align-items:center;gap:6px">
+            <i class="bi bi-plus-lg"></i> Yangi owner
+        </a>
+    </div>
+</div>
+
+{% for msg in messages %}
+<div style="
+    background: {% if msg.tags == 'success' %}#1a3d2a{% elif msg.tags == 'error' %}#3d1212{% else %}#3d2a0f{% endif %};
+    color: {% if msg.tags == 'success' %}#4dbe68{% elif msg.tags == 'error' %}#f44336{% else %}#f5a623{% endif %};
+    border: 1px solid {% if msg.tags == 'success' %}#2a6040{% elif msg.tags == 'error' %}#6a2020{% else %}#6a4a10{% endif %};
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.9rem;
+">
+    <i class="bi bi-{% if msg.tags == 'success' %}check-circle{% elif msg.tags == 'error' %}x-circle{% else %}exclamation-circle{% endif %} me-2"></i>{{ msg }}
+</div>
+{% endfor %}
+
+<div class="tg-card mb-4" style="padding:14px 16px">
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        <form class="d-flex gap-2 flex-grow-1" method="get">
+            <input type="text" name="q" class="tg-search" placeholder="Login, foydalanuvchi yoki guruh bo'yicha qidirish..." value="{{ query }}">
+            {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+            <button type="submit" class="tg-btn" style="white-space:nowrap"><i class="bi bi-search me-1"></i>Qidirish</button>
+            {% if query or status %}<a href="{% url 'group_owners' %}" class="tg-btn tg-btn-ghost" style="white-space:nowrap">Tozalash</a>{% endif %}
+        </form>
+        <div class="filter-tabs">
+            <a href="{% url 'group_owners' %}{% if query %}?q={{ query }}{% endif %}" class="filter-tab {% if not status %}active{% endif %}">Barchasi</a>
+            <a href="?status=active{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if status == 'active' %}active{% endif %}">Active</a>
+            <a href="?status=inactive{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if status == 'inactive' %}active{% endif %}">Inactive</a>
+        </div>
+    </div>
+</div>
+
+<div class="tg-card">
+    <div class="tg-table-wrap"><table class="tg-table">
+        <thead>
+            <tr>
+                <th>Owner</th>
+                <th>Guruh</th>
+                <th>Login</th>
+                <th>Holat</th>
+                <th>Yaratilgan</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for owner in owners %}
+            <tr>
+                <td>
+                    <div class="user-info">
+                        <div class="user-avatar" style="background:linear-gradient(135deg,#23435f,#5288c1)">
+                            {{ owner.user.full_name|default:owner.user.mention|striptags|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <a href="{% url 'user_detail' owner.user.id %}" class="user-name">{{ owner.user.full_name|default:"-"|striptags|truncatechars:28 }}</a>
+                            <div class="user-id">{{ owner.user.mention|default:"-"|striptags|truncatechars:22 }} · {{ owner.user.user_id }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div style="font-weight:600;color:#f5f5f5">{{ owner.chat.title|default:"-"|truncatechars:32 }}</div>
+                    <div style="font-size:0.78rem;color:#708499"><code>{{ owner.chat.chat_id }}</code></div>
+                </td>
+                <td><code>{{ owner.login }}</code></td>
+                <td>
+                    {% if owner.is_active %}
+                    <span style="background:#1a3d2a;color:#4dbe68;padding:4px 10px;border-radius:20px;font-size:.8rem;font-weight:700">Active</span>
+                    {% else %}
+                    <span style="background:#3d1212;color:#f44336;padding:4px 10px;border-radius:20px;font-size:.8rem;font-weight:700">Inactive</span>
+                    {% endif %}
+                </td>
+                <td style="color:#708499;font-size:.82rem">{{ owner.created_at|date:"d.m.Y H:i" }}</td>
+                <td style="white-space:nowrap">
+                    <a href="{% url 'group_owner_edit' owner.id %}" class="tg-btn tg-btn-sm">
+                        <i class="bi bi-pencil-square me-1"></i>Tahrirlash
+                    </a>
+                    <form method="post" action="{% url 'group_owner_toggle' owner.id %}" style="display:inline">
+                        {% csrf_token %}
+                        <button type="submit" class="tg-btn tg-btn-sm tg-btn-ghost" style="margin-left:4px">
+                            {% if owner.is_active %}<i class="bi bi-pause-circle me-1"></i>Inactive{% else %}<i class="bi bi-play-circle me-1"></i>Active{% endif %}
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="text-align:center;color:#708499;padding:32px">Group owner topilmadi</td></tr>
+            {% endfor %}
+        </tbody>
+    </table></div>
+</div>
+
+{% if owners.has_other_pages %}
+<div class="tg-pagination">
+    {% if owners.has_previous %}
+    <a class="tg-page-btn" href="?page={{ owners.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}"><i class="bi bi-chevron-left"></i></a>
+    {% endif %}
+    {% for num in owners.paginator.page_range %}
+        {% if owners.number == num %}
+        <span class="tg-page-btn active">{{ num }}</span>
+        {% elif num > owners.number|add:'-3' and num < owners.number|add:'3' %}
+        <a class="tg-page-btn" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+    {% if owners.has_next %}
+    <a class="tg-page-btn" href="?page={{ owners.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}"><i class="bi bi-chevron-right"></i></a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 
 from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice
+from main.models import GroupOwner
 
 
 def _with_chat_title(queryset):
@@ -253,6 +254,148 @@ def chats_list(request):
     chats = paginator.get_page(page)
 
     return render(request, 'bot/chats.html', {'chats': chats, 'query': query, 'type_filter': type_filter})
+
+
+def _find_owner_user(value):
+    value = (value or '').strip()
+    if not value:
+        return None
+
+    lookup = Q(full_name__icontains=value) | Q(mention__icontains=value)
+    if value.isdigit():
+        lookup |= Q(user_id=int(value))
+    return User.objects.filter(lookup).order_by('id').first()
+
+
+def _find_owner_chat(value):
+    value = (value or '').strip()
+    if not value:
+        return None
+
+    lookup = Q(title__icontains=value)
+    try:
+        lookup |= Q(chat_id=int(value))
+    except ValueError:
+        pass
+    return Chat.objects.filter(lookup).order_by('id').first()
+
+
+@login_required
+def group_owners_list(request):
+    query = request.GET.get('q', '').strip()
+    status = request.GET.get('status', '')
+    owners = GroupOwner.objects.select_related('user', 'chat').order_by('-created_at')
+
+    if query:
+        owners = owners.filter(
+            Q(login__icontains=query) |
+            Q(user__full_name__icontains=query) |
+            Q(user__mention__icontains=query) |
+            Q(user__user_id__icontains=query) |
+            Q(chat__title__icontains=query) |
+            Q(chat__chat_id__icontains=query)
+        )
+    if status == 'active':
+        owners = owners.filter(is_active=True)
+    elif status == 'inactive':
+        owners = owners.filter(is_active=False)
+
+    paginator = Paginator(owners, 40)
+    owners = paginator.get_page(request.GET.get('page'))
+
+    return render(request, 'bot/group_owners.html', {
+        'owners': owners,
+        'query': query,
+        'status': status,
+    })
+
+
+@login_required
+def group_owner_create(request):
+    if request.method == 'POST':
+        user_value = request.POST.get('user', '')
+        chat_value = request.POST.get('chat', '')
+        login = request.POST.get('login', '').strip()
+        password = request.POST.get('password', '').strip()
+        is_active = request.POST.get('is_active') == 'on'
+
+        user = _find_owner_user(user_value)
+        chat = _find_owner_chat(chat_value)
+
+        if not user:
+            messages.error(request, "Foydalanuvchi topilmadi. Telegram ID, @mention yoki ism bilan qayta kiriting.")
+        elif not chat:
+            messages.error(request, "Guruh topilmadi. Chat ID yoki guruh nomi bilan qayta kiriting.")
+        elif not login:
+            messages.error(request, "Login kiritish kerak.")
+        elif not password:
+            messages.error(request, "Parol kiritish kerak.")
+        elif GroupOwner.objects.filter(login=login).exists():
+            messages.error(request, "Bu login band. Boshqa login kiriting.")
+        elif GroupOwner.objects.filter(user=user, chat=chat).exists():
+            messages.error(request, "Bu foydalanuvchi allaqachon shu guruhga owner qilib biriktirilgan.")
+        else:
+            owner = GroupOwner(user=user, chat=chat, login=login, is_active=is_active)
+            owner.set_password(password)
+            owner.save()
+            messages.success(request, "Group owner yaratildi.")
+            return redirect('group_owners')
+
+    return render(request, 'bot/group_owner_form.html', {
+        'owner': None,
+        'form_action': 'create',
+    })
+
+
+@login_required
+def group_owner_edit(request, owner_id):
+    owner = get_object_or_404(GroupOwner.objects.select_related('user', 'chat'), id=owner_id)
+
+    if request.method == 'POST':
+        user_value = request.POST.get('user', '')
+        chat_value = request.POST.get('chat', '')
+        login = request.POST.get('login', '').strip()
+        password = request.POST.get('password', '').strip()
+        is_active = request.POST.get('is_active') == 'on'
+
+        user = _find_owner_user(user_value)
+        chat = _find_owner_chat(chat_value)
+
+        if not user:
+            messages.error(request, "Foydalanuvchi topilmadi. Telegram ID, @mention yoki ism bilan qayta kiriting.")
+        elif not chat:
+            messages.error(request, "Guruh topilmadi. Chat ID yoki guruh nomi bilan qayta kiriting.")
+        elif not login:
+            messages.error(request, "Login kiritish kerak.")
+        elif GroupOwner.objects.exclude(id=owner.id).filter(login=login).exists():
+            messages.error(request, "Bu login band. Boshqa login kiriting.")
+        elif GroupOwner.objects.exclude(id=owner.id).filter(user=user, chat=chat).exists():
+            messages.error(request, "Bu foydalanuvchi allaqachon shu guruhga owner qilib biriktirilgan.")
+        else:
+            owner.user = user
+            owner.chat = chat
+            owner.login = login
+            owner.is_active = is_active
+            if password:
+                owner.set_password(password)
+            owner.save()
+            messages.success(request, "Group owner yangilandi.")
+            return redirect('group_owners')
+
+    return render(request, 'bot/group_owner_form.html', {
+        'owner': owner,
+        'form_action': 'edit',
+    })
+
+
+@login_required
+def group_owner_toggle(request, owner_id):
+    if request.method == 'POST':
+        owner = get_object_or_404(GroupOwner, id=owner_id)
+        owner.is_active = not owner.is_active
+        owner.save(update_fields=['is_active', 'updated_at'])
+        messages.success(request, f"{owner.login} {'aktiv qilindi' if owner.is_active else 'inactive qilindi'}.")
+    return redirect('group_owners')
 
 
 @login_required

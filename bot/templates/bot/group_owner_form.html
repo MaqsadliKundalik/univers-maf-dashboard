@@ -1,0 +1,82 @@
+{% extends 'bot/base.html' %}
+{% block title %}{% if owner %}Group owner tahrirlash{% else %}Yangi group owner{% endif %} - MafiaDash{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        <i class="bi bi-person-gear me-2" style="color:#5288c1"></i>
+        {% if owner %}Group owner tahrirlash{% else %}Yangi group owner{% endif %}
+    </h1>
+    <p>User va guruhni bog'lab, owner uchun login-parol belgilang.</p>
+</div>
+
+{% for msg in messages %}
+<div style="
+    background: {% if msg.tags == 'success' %}#1a3d2a{% elif msg.tags == 'error' %}#3d1212{% else %}#3d2a0f{% endif %};
+    color: {% if msg.tags == 'success' %}#4dbe68{% elif msg.tags == 'error' %}#f44336{% else %}#f5a623{% endif %};
+    border: 1px solid {% if msg.tags == 'success' %}#2a6040{% elif msg.tags == 'error' %}#6a2020{% else %}#6a4a10{% endif %};
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.9rem;
+">
+    <i class="bi bi-{% if msg.tags == 'success' %}check-circle{% elif msg.tags == 'error' %}x-circle{% else %}exclamation-circle{% endif %} me-2"></i>{{ msg }}
+</div>
+{% endfor %}
+
+<div class="tg-card" style="padding:20px;max-width:760px">
+    <form method="post">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label style="font-size:.82rem;color:#adb5bd;margin-bottom:6px;font-weight:600">Foydalanuvchi</label>
+                <input
+                    type="text"
+                    name="user"
+                    class="tg-search"
+                    placeholder="Telegram ID, @mention yoki ism"
+                    value="{% if owner %}{{ owner.user.user_id }}{% endif %}"
+                    required
+                >
+                {% if owner %}
+                <div style="margin-top:6px;font-size:.78rem;color:#708499">{{ owner.user.full_name|default:"-" }} · {{ owner.user.mention|default:"-" }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <label style="font-size:.82rem;color:#adb5bd;margin-bottom:6px;font-weight:600">Guruh</label>
+                <input
+                    type="text"
+                    name="chat"
+                    class="tg-search"
+                    placeholder="Chat ID yoki guruh nomi"
+                    value="{% if owner %}{{ owner.chat.chat_id }}{% endif %}"
+                    required
+                >
+                {% if owner %}
+                <div style="margin-top:6px;font-size:.78rem;color:#708499">{{ owner.chat.title|default:"-" }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <label style="font-size:.82rem;color:#adb5bd;margin-bottom:6px;font-weight:600">Login</label>
+                <input type="text" name="login" class="tg-search" value="{% if owner %}{{ owner.login }}{% endif %}" required>
+            </div>
+            <div class="col-md-6">
+                <label style="font-size:.82rem;color:#adb5bd;margin-bottom:6px;font-weight:600">
+                    Parol {% if owner %}<span style="color:#708499;font-weight:400">(bo'sh qoldirilsa o'zgarmaydi)</span>{% endif %}
+                </label>
+                <input type="password" name="password" class="tg-search" {% if not owner %}required{% endif %}>
+            </div>
+            <div class="col-12">
+                <label style="display:flex;align-items:center;gap:10px;color:#adb5bd;font-size:.9rem">
+                    <input type="checkbox" name="is_active" {% if not owner or owner.is_active %}checked{% endif %} style="width:18px;height:18px">
+                    Active holatda bo'lsin
+                </label>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap" style="margin-top:22px">
+            <button type="submit" class="tg-btn" style="display:flex;align-items:center;gap:6px">
+                <i class="bi bi-check2-circle"></i> Saqlash
+            </button>
+            <a href="{% url 'group_owners' %}" class="tg-btn tg-btn-ghost">Bekor qilish</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
