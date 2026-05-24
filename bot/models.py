@@ -361,6 +361,7 @@ class GamePlayer(models.Model):
     is_actioned = models.BooleanField(default=False)
     life = models.IntegerField(default=100)
     team = models.CharField(max_length=20, null=True)
+    ball = models.IntegerField(default=0)
 
     class Meta:
         db_table = "gameplayer"

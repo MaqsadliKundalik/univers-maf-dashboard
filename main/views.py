@@ -12,8 +12,11 @@ from django.utils import timezone
 from bot.models import (
     BlockedUser,
     Chat,
+    CommandPermissionsChat,
     Game,
     GamePlayer,
+    GameModeSet,
+    GameSetListRoles,
     GroupBalance,
     Geroy,
     GroupIncome,
@@ -29,6 +32,32 @@ from bot.models import (
     XCoinWallet,
 )
 from .models import GroupStatsLink, UserProfileLink
+
+
+ROLE_NAMES = [
+    "🤵🏻 Don", "🤵🏼 Mafia", "🔪 Manyak", "🕵🏼 Komissar", "👨🏼‍⚕️️ Doktor",
+    "👮🏼 Serjant", "🧙‍♂️ Daydi", "💃 Mashuqa", "👨🏼‍💼 Advokat", "🧌 Suidsid",
+    "🥷 убийца", "💣 Kamikaze", "🤹🏻 Aferist", "☠️  Minior", "🤵🏻‍♀️ Donning xotini",
+    "🧟 Zombi", "👨‍🔬 Kimyogar", "👨🏻‍🦲 Tentak", "🦎 Buqalamun", "🎁 Sotuvchi",
+    "🔮 Muxlis", "🤞🏼 Omadli", "💰 Rais", "🧙 Sehrgar", "👨🏻‍🎤 Mergan",
+    "🎖 Janob", "🐑 Qo'y",
+]
+BASE_ROLES = {"🤵🏻 Don", "🤵🏼 Mafia", "🕵🏼 Komissar", "👨🏼 Tinch axoli", "🧟 Zombi", "👨🏼‍⚕️️ Doktor"}
+OPTIONAL_ROLES = [role for role in ROLE_NAMES if role not in BASE_ROLES]
+GAME_MODES = [
+    "classic", "baku", "bloody", "bloody mega",
+    "zombie x classic 1", "zombie x baku 1", "zombie x bloody 1",
+    "para x classic", "para x baku", "para x bloody",
+]
+COMMAND_OPTIONS = ["admin", "member", "ega"]
+COMMAND_LABELS = {
+    "start": "Start",
+    "stop": "Stop",
+    "game": "Game",
+    "top1": "Top 1",
+    "top7": "Top 7",
+    "top30": "Top 30",
+}
 
 
 def index(request):
@@ -119,18 +148,74 @@ def group_stats(request, token):
 
     chat = link.chat
     section = request.GET.get('section', 'overview')
-    if section not in {'overview', 'rating', 'transfers'}:
+    if section not in {'overview', 'rating', 'transfers', 'settings'}:
         section = 'overview'
 
     try:
         days = int(request.GET.get('days', 30))
     except (TypeError, ValueError):
         days = 30
-    if days not in {7, 30, 90}:
+    if days not in {1, 7, 30, 90}:
         days = 30
 
-    start_date = timezone.now() - timedelta(days=days)
-    stats_period_label = f"So'nggi {days} kun"
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        try:
+            if action == 'set_mode':
+                mode = request.POST.get('mode')
+                if mode in GAME_MODES:
+                    mode_set, _ = GameModeSet.objects.get_or_create(chat_id=chat.chat_id)
+                    mode_set.mode_name = mode
+                    mode_set.save(update_fields=['mode_name'])
+            elif action == 'set_command':
+                command = request.POST.get('command')
+                permission = request.POST.get('permission')
+                if command in COMMAND_LABELS and permission in COMMAND_OPTIONS:
+                    perms, _ = CommandPermissionsChat.objects.get_or_create(
+                        chat_id=chat.chat_id,
+                        defaults={
+                            'game_cmd': 'admin',
+                            'start_cmd': 'admin',
+                            'stop_cmd': 'admin',
+                            'top1_cmd': 'admin',
+                            'top7_cmd': 'admin',
+                            'top30_cmd': 'admin',
+                            'gtop1_cmd': 'admin',
+                            'gtop7_cmd': 'admin',
+                            'gtop30_cmd': 'admin',
+                        },
+                    )
+                    setattr(perms, f'{command}_cmd', permission)
+                    perms.save(update_fields=[f'{command}_cmd'])
+            elif action == 'set_role':
+                role = request.POST.get('role')
+                enabled = request.POST.get('enabled') == '1'
+                if role in OPTIONAL_ROLES:
+                    role_set, _ = GameSetListRoles.objects.get_or_create(chat_id=chat.chat_id)
+                    banned = set(role_set.get_blacklist())
+                    if enabled:
+                        banned.discard(role)
+                    else:
+                        banned.add(role)
+                    role_set.blacklist = ",".join(sorted(banned))
+                    role_set.save(update_fields=['blacklist'])
+            cache.delete(f'group_settings_{chat.chat_id}')
+        except Exception:
+            pass
+
+    now = timezone.now()
+    if days == 1:
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        stats_period_label = "Bugun"
+    elif days == 7:
+        start_date = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+        stats_period_label = "Hafta"
+    elif days == 30:
+        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        stats_period_label = "Oy"
+    else:
+        start_date = now - timedelta(days=90)
+        stats_period_label = "So'nggi 90 kun"
     stats = cache.get(f'group_overview_{chat.chat_id}_{days}')
     if not stats:
         try:
@@ -163,14 +248,14 @@ def group_stats(request, token):
                     game__chat=chat,
                     game__created_at__gte=start_date,
                 ).select_related('user')
-                scored_players = _players_score_queryset(players_period)
-                top_winners = scored_players.values('user__full_name', 'user__mention').annotate(
-                    total_score=Coalesce(Sum('delta'), 0),
+                top_winners = players_period.values('user_id', 'user__full_name', 'user__mention').annotate(
+                    total_score=Coalesce(Sum('ball'), 0),
                     games_count=Count('game', distinct=True),
                 ).order_by('-total_score')[:200]
 
                 top_players = [
                     {
+                        'user_id': entry['user_id'],
                         'user': {'full_name': entry['user__full_name'], 'mention': entry['user__mention']},
                         'score': entry['total_score'],
                         'games_count': entry['games_count'],
@@ -231,6 +316,37 @@ def group_stats(request, token):
     else:
         subscription_status = "Yo'q"
 
+    settings_cache_key = f'group_settings_{chat.chat_id}'
+    settings_data = cache.get(settings_cache_key)
+    if not settings_data:
+        try:
+            mode_set = GameModeSet.objects.filter(chat_id=chat.chat_id).first()
+            role_set = GameSetListRoles.objects.filter(chat_id=chat.chat_id).first()
+            command_perms = CommandPermissionsChat.objects.filter(chat_id=chat.chat_id).first()
+            banned_roles = set(role_set.get_blacklist()) if role_set else set()
+            settings_data = {
+                'mode': mode_set.mode_name if mode_set else 'baku',
+                'roles': [
+                    {'name': role, 'enabled': role not in banned_roles}
+                    for role in OPTIONAL_ROLES
+                ],
+                'commands': [
+                    {
+                        'key': key,
+                        'label': label,
+                        'permission': getattr(command_perms, f'{key}_cmd', 'admin') if command_perms else 'admin',
+                    }
+                    for key, label in COMMAND_LABELS.items()
+                ],
+            }
+        except Exception:
+            settings_data = {
+                'mode': 'baku',
+                'roles': [{'name': role, 'enabled': True} for role in OPTIONAL_ROLES],
+                'commands': [{'key': key, 'label': label, 'permission': 'admin'} for key, label in COMMAND_LABELS.items()],
+            }
+        cache.set(settings_cache_key, settings_data, 300)
+
     return render(request, 'main/group_stats.html', {
         'chat': chat,
         'stats': stats,
@@ -241,6 +357,9 @@ def group_stats(request, token):
         'stats_period_label': stats_period_label,
         'section': section,
         'days': days,
+        'game_modes': GAME_MODES,
+        'command_options': COMMAND_OPTIONS,
+        'settings_data': settings_data,
         'group_account': {
             'balance': balance_amount,
             'subscription_status': subscription_status,
@@ -276,8 +395,8 @@ def user_profile(request, token):
 
     month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     try:
-        score = _players_score_queryset(GamePlayer.objects.filter(user=user, game__created_at__gte=month_start)).aggregate(
-            total=Coalesce(Sum('delta'), 0)
+        score = GamePlayer.objects.filter(user=user, game__created_at__gte=month_start).aggregate(
+            total=Coalesce(Sum('ball'), 0)
         )['total'] or 0
     except DatabaseError:
         score = 0
