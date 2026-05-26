@@ -296,10 +296,9 @@ def group_owner_user_suggestions(request):
 
     items = []
     for user in users.order_by('-id')[:6]:
-        nick = user.mention or '-'
         telegram_id = str(user.user_id)
-        label = user.full_name or nick or telegram_id
-        meta = f"Nik: {nick} · Telegram ID: {telegram_id}"
+        label = user.full_name or telegram_id
+        meta = f"Telegram ID: {telegram_id}"
         items.append({
             'value': str(user.user_id),
             'title': label,
@@ -324,7 +323,7 @@ def group_owner_chat_suggestions(request):
         items.append({
             'value': telegram_id,
             'title': chat.title or telegram_id,
-            'meta': f"Nik: {chat.title or '-'} · Telegram ID: {telegram_id}",
+            'meta': f"Telegram ID: {telegram_id}",
         })
     return JsonResponse({'items': items})
 
