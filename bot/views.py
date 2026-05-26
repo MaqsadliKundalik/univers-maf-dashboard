@@ -1,7 +1,9 @@
 from datetime import timedelta
 
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Sum, Count, Q, Subquery, OuterRef
+from django.http import JsonResponse
+from django.db.models import Sum, Count, Q, Subquery, OuterRef, CharField
+from django.db.models.functions import Cast
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -261,10 +263,12 @@ def _find_owner_user(value):
     if not value:
         return None
 
-    lookup = Q(full_name__icontains=value) | Q(mention__icontains=value)
-    if value.isdigit():
-        lookup |= Q(user_id=int(value))
-    return User.objects.filter(lookup).order_by('id').first()
+    lookup = (
+        Q(full_name__icontains=value) |
+        Q(mention__icontains=value) |
+        Q(user_id_text__icontains=value)
+    )
+    return User.objects.annotate(user_id_text=Cast('user_id', CharField())).filter(lookup).order_by('id').first()
 
 
 def _find_owner_chat(value):
@@ -272,12 +276,57 @@ def _find_owner_chat(value):
     if not value:
         return None
 
-    lookup = Q(title__icontains=value)
-    try:
-        lookup |= Q(chat_id=int(value))
-    except ValueError:
-        pass
-    return Chat.objects.filter(lookup).order_by('id').first()
+    lookup = Q(title__icontains=value) | Q(chat_id_text__icontains=value)
+    return Chat.objects.annotate(chat_id_text=Cast('chat_id', CharField())).filter(lookup).order_by('id').first()
+
+
+@login_required
+def group_owner_user_suggestions(request):
+    query = request.GET.get('q', '').strip()
+    users = User.objects.all()
+
+    if query:
+        users = users.annotate(user_id_text=Cast('user_id', CharField()))
+        lookup = (
+            Q(full_name__icontains=query) |
+            Q(mention__icontains=query) |
+            Q(user_id_text__icontains=query)
+        )
+        users = users.filter(lookup)
+
+    items = []
+    for user in users.order_by('-id')[:6]:
+        nick = user.mention or '-'
+        telegram_id = str(user.user_id)
+        label = user.full_name or nick or telegram_id
+        meta = f"Nik: {nick} · Telegram ID: {telegram_id}"
+        items.append({
+            'value': str(user.user_id),
+            'title': label,
+            'meta': meta,
+        })
+    return JsonResponse({'items': items})
+
+
+@login_required
+def group_owner_chat_suggestions(request):
+    query = request.GET.get('q', '').strip()
+    chats = Chat.objects.all()
+
+    if query:
+        chats = chats.annotate(chat_id_text=Cast('chat_id', CharField()))
+        lookup = Q(title__icontains=query) | Q(chat_id_text__icontains=query)
+        chats = chats.filter(lookup)
+
+    items = []
+    for chat in chats.order_by('-created_at')[:6]:
+        telegram_id = str(chat.chat_id)
+        items.append({
+            'value': telegram_id,
+            'title': chat.title or telegram_id,
+            'meta': f"Nik: {chat.title or '-'} · Telegram ID: {telegram_id}",
+        })
+    return JsonResponse({'items': items})
 
 
 @login_required

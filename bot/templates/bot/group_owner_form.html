@@ -2,6 +2,49 @@
 {% block title %}{% if owner %}Group owner tahrirlash{% else %}Yangi group owner{% endif %} - MafiaDash{% endblock %}
 
 {% block content %}
+<style>
+    .owner-autocomplete { position: relative; }
+    .owner-suggestions {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        z-index: 20;
+        display: none;
+        background: #1f2a36;
+        border: 1px solid #344458;
+        border-radius: 12px;
+        box-shadow: 0 16px 34px rgba(0,0,0,.28);
+        overflow: hidden;
+        max-height: 280px;
+        overflow-y: auto;
+    }
+    .owner-suggestions.show { display: block; }
+    .owner-suggestion {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        color: #f5f5f5;
+        padding: 10px 12px;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        cursor: pointer;
+    }
+    .owner-suggestion:hover,
+    .owner-suggestion.active { background: #2b3a4a; }
+    .owner-suggestion-title { font-weight: 700; font-size: .9rem; }
+    .owner-suggestion-meta { color: #708499; font-size: .78rem; margin-top: 2px; }
+    .owner-suggestion-value {
+        color: #8fbce8;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: .78rem;
+        white-space: nowrap;
+    }
+</style>
+
 <div class="page-header">
     <h1>
         <i class="bi bi-person-gear me-2" style="color:#5288c1"></i>
@@ -27,28 +70,36 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <label style="font-size:.82rem;color:#adb5bd;margin-bottom:6px;font-weight:600">Foydalanuvchi</label>
-                <input
-                    type="text"
-                    name="user"
-                    class="tg-search"
-                    placeholder="Telegram ID, @mention yoki ism"
-                    value="{% if owner %}{{ owner.user.user_id }}{% endif %}"
-                    required
-                >
+                <div class="owner-autocomplete" data-url="{% url 'group_owner_user_suggestions' %}">
+                    <input
+                        type="text"
+                        name="user"
+                        class="tg-search js-owner-autocomplete"
+                        placeholder="Telegram ID, @mention yoki ism"
+                        value="{% if owner %}{{ owner.user.user_id }}{% endif %}"
+                        autocomplete="off"
+                        required
+                    >
+                    <div class="owner-suggestions"></div>
+                </div>
                 {% if owner %}
                 <div style="margin-top:6px;font-size:.78rem;color:#708499">{{ owner.user.full_name|default:"-" }} · {{ owner.user.mention|default:"-" }}</div>
                 {% endif %}
             </div>
             <div class="col-md-6">
                 <label style="font-size:.82rem;color:#adb5bd;margin-bottom:6px;font-weight:600">Guruh</label>
-                <input
-                    type="text"
-                    name="chat"
-                    class="tg-search"
-                    placeholder="Chat ID yoki guruh nomi"
-                    value="{% if owner %}{{ owner.chat.chat_id }}{% endif %}"
-                    required
-                >
+                <div class="owner-autocomplete" data-url="{% url 'group_owner_chat_suggestions' %}">
+                    <input
+                        type="text"
+                        name="chat"
+                        class="tg-search js-owner-autocomplete"
+                        placeholder="Chat ID yoki guruh nomi"
+                        value="{% if owner %}{{ owner.chat.chat_id }}{% endif %}"
+                        autocomplete="off"
+                        required
+                    >
+                    <div class="owner-suggestions"></div>
+                </div>
                 {% if owner %}
                 <div style="margin-top:6px;font-size:.78rem;color:#708499">{{ owner.chat.title|default:"-" }}</div>
                 {% endif %}
@@ -79,4 +130,79 @@
         </div>
     </form>
 </div>
+
+<script>
+    document.querySelectorAll('.owner-autocomplete').forEach((wrap) => {
+        const input = wrap.querySelector('.js-owner-autocomplete');
+        const list = wrap.querySelector('.owner-suggestions');
+        const url = wrap.dataset.url;
+        let timer = null;
+
+        const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+        }[char]));
+
+        const hide = () => {
+            list.classList.remove('show');
+            list.innerHTML = '';
+        };
+
+        const render = (items) => {
+            if (!items.length) {
+                hide();
+                return;
+            }
+
+            list.innerHTML = items.map((item) => `
+                <button type="button" class="owner-suggestion" data-value="${escapeHtml(item.value)}">
+                    <span>
+                        <span class="owner-suggestion-title">${escapeHtml(item.title)}</span>
+                        <span class="owner-suggestion-meta">${escapeHtml(item.meta)}</span>
+                    </span>
+                    <span class="owner-suggestion-value">${escapeHtml(item.value)}</span>
+                </button>
+            `).join('');
+            list.classList.add('show');
+        };
+
+        const load = () => {
+            const query = input.value.trim();
+            fetch(`${url}?q=${encodeURIComponent(query)}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+                .then((response) => response.ok ? response.json() : { items: [] })
+                .then((data) => render(data.items || []))
+                .catch(hide);
+        };
+
+        input.addEventListener('input', () => {
+            clearTimeout(timer);
+            timer = setTimeout(load, 180);
+        });
+
+        input.addEventListener('focus', () => {
+            if (!input.value.trim()) {
+                load();
+            }
+        });
+
+        list.addEventListener('click', (event) => {
+            const item = event.target.closest('.owner-suggestion');
+            if (!item) return;
+            input.value = item.dataset.value;
+            hide();
+            input.focus();
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!wrap.contains(event.target)) {
+                hide();
+            }
+        });
+    });
+</script>
 {% endblock %}
