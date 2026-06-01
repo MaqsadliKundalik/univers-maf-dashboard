@@ -355,7 +355,7 @@
             </a>
         </div>
         <div class="nav-item">
-            <a href="{% url 'chats' %}" class="nav-link {% if request.resolver_match.url_name == 'chats' %}active{% endif %}">
+            <a href="{% url 'chats' %}" class="nav-link {% if request.resolver_match.url_name == 'chats' or request.resolver_match.url_name == 'chat_detail' %}active{% endif %}">
                 <i class="bi bi-chat-dots"></i> Chatlar
             </a>
         </div>

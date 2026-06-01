@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 
-from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice
+from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice, GroupSubscription
 from main.models import GroupOwner
 
 
@@ -244,7 +244,8 @@ def giveaways_list(request):
 def chats_list(request):
     query = request.GET.get('q', '')
     type_filter = request.GET.get('type', '')
-    chats = Chat.objects.order_by('-created_at')
+    subscription_expires_sq = GroupSubscription.objects.filter(chat_id=OuterRef('chat_id')).values('expires_at')[:1]
+    chats = Chat.objects.annotate(subscription_expires_at=Subquery(subscription_expires_sq)).order_by('-created_at')
 
     if query:
         chats = chats.filter(Q(title__icontains=query) | Q(chat_id__icontains=query))
@@ -255,7 +256,78 @@ def chats_list(request):
     page = request.GET.get('page')
     chats = paginator.get_page(page)
 
-    return render(request, 'bot/chats.html', {'chats': chats, 'query': query, 'type_filter': type_filter})
+    return render(request, 'bot/chats.html', {
+        'chats': chats,
+        'query': query,
+        'type_filter': type_filter,
+        'now': timezone.now(),
+    })
+
+
+@login_required
+def chat_detail(request, chat_id):
+    chat = get_object_or_404(Chat, id=chat_id)
+    subscription = GroupSubscription.objects.filter(chat_id=chat.chat_id).first()
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+
+        if action == 'set_date':
+            expires_date = request.POST.get('expires_at', '').strip()
+            if not expires_date:
+                messages.error(request, "Obuna tugash sanasini kiriting.")
+            else:
+                try:
+                    selected_date = datetime.strptime(expires_date, '%Y-%m-%d').date()
+                    expires_at = timezone.make_aware(datetime.combine(selected_date, time.max))
+                    subscription, _ = GroupSubscription.objects.get_or_create(chat_id=chat.chat_id)
+                    subscription.expires_at = expires_at
+                    subscription.save(update_fields=['expires_at', 'updated_at'])
+                    messages.success(request, f"Obuna {selected_date.strftime('%d.%m.%Y')} sanasigacha belgilandi.")
+                except ValueError:
+                    messages.error(request, "Sana formati noto'g'ri.")
+
+        elif action == 'add_days':
+            days_value = request.POST.get('days', '').strip()
+            if not days_value.isdigit() or int(days_value) <= 0:
+                messages.error(request, "Kunlar sonini musbat raqam qilib kiriting.")
+            else:
+                days = int(days_value)
+                now = timezone.now()
+                base_date = subscription.expires_at if subscription and subscription.expires_at and subscription.expires_at > now else now
+                subscription, _ = GroupSubscription.objects.get_or_create(chat_id=chat.chat_id)
+                subscription.expires_at = base_date + timedelta(days=days)
+                subscription.save(update_fields=['expires_at', 'updated_at'])
+                messages.success(request, f"Obunaga {days} kun qo'shildi.")
+
+        elif action == 'cancel':
+            if subscription:
+                subscription.expires_at = None
+                subscription.save(update_fields=['expires_at', 'updated_at'])
+            messages.success(request, "Obuna bekor qilindi.")
+
+        return redirect('chat_detail', chat_id=chat.id)
+
+    now = timezone.now()
+    expires_at = subscription.expires_at if subscription else None
+    subscription_is_active = bool(expires_at and expires_at > now)
+    subscription_days_left = (expires_at - now).days if subscription_is_active else 0
+
+    if subscription_is_active:
+        subscription_status = 'Faol'
+    elif expires_at:
+        subscription_status = 'Tugagan'
+    else:
+        subscription_status = "Yo'q"
+
+    return render(request, 'bot/chat_detail.html', {
+        'chat': chat,
+        'subscription': subscription,
+        'subscription_status': subscription_status,
+        'subscription_is_active': subscription_is_active,
+        'subscription_days_left': subscription_days_left,
+        'expires_date_value': expires_at.date().isoformat() if expires_at else '',
+    })
 
 
 def _find_owner_user(value):

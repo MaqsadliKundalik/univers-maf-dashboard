@@ -14,6 +14,7 @@ urlpatterns = [
     path('geroys/', views.geroys_list, name='geroys'),
     path('giveaways/', views.giveaways_list, name='giveaways'),
     path('chats/', views.chats_list, name='chats'),
+    path('chats/<int:chat_id>/', views.chat_detail, name='chat_detail'),
     path('group-owners/', views.group_owners_list, name='group_owners'),
     path('group-owners/create/', views.group_owner_create, name='group_owner_create'),
     path('group-owners/user-suggestions/', views.group_owner_user_suggestions, name='group_owner_user_suggestions'),

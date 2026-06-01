@@ -1,0 +1,132 @@
+{% extends 'bot/base.html' %}
+{% block title %}{{ chat.title }} - MafiaDash{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex align-items-center gap-3">
+    <a href="{% url 'chats' %}" class="tg-btn tg-btn-ghost tg-btn-sm"><i class="bi bi-arrow-left"></i></a>
+    <div style="min-width:0">
+        <h1 style="margin:0;font-size:1.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            {{ chat.title|default:chat.chat_id }}
+        </h1>
+        <p style="margin:2px 0 0;color:#708499;font-size:0.85rem">
+            <code>{{ chat.chat_id }}</code> · {{ chat.type }} · {{ chat.created_at|date:"d.m.Y H:i" }}
+        </p>
+    </div>
+</div>
+
+{% for msg in messages %}
+<div style="
+    background: {% if msg.tags == 'success' %}#1a3d2a{% elif msg.tags == 'error' %}#3d1212{% else %}#3d2a0f{% endif %};
+    color: {% if msg.tags == 'success' %}#4dbe68{% elif msg.tags == 'error' %}#f44336{% else %}#f5a623{% endif %};
+    border: 1px solid {% if msg.tags == 'success' %}#2a6040{% elif msg.tags == 'error' %}#6a2020{% else %}#6a4a10{% endif %};
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.9rem;
+">
+    <i class="bi bi-{% if msg.tags == 'success' %}check-circle{% elif msg.tags == 'error' %}x-circle{% else %}exclamation-circle{% endif %} me-2"></i>{{ msg }}
+</div>
+{% endfor %}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="tg-card">
+            <div class="tg-card-header">
+                <div class="title"><i class="bi bi-receipt" style="color:#5288c1"></i> Obuna holati</div>
+            </div>
+            <div style="padding:20px">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px">
+                    <span style="color:#708499;font-size:.86rem">Holat</span>
+                    {% if subscription_is_active %}
+                    <span style="background:#1a3d2a;color:#4dbe68;padding:5px 12px;border-radius:20px;font-size:.82rem;font-weight:700">Faol</span>
+                    {% elif subscription.expires_at %}
+                    <span style="background:#3d2a0f;color:#f5a623;padding:5px 12px;border-radius:20px;font-size:.82rem;font-weight:700">Tugagan</span>
+                    {% else %}
+                    <span style="background:#2b2b2b;color:#708499;padding:5px 12px;border-radius:20px;font-size:.82rem;font-weight:700">Yo'q</span>
+                    {% endif %}
+                </div>
+
+                <div style="background:#1c2631;border:1px solid #2b3a4a;border-radius:12px;padding:16px;margin-bottom:12px">
+                    <div style="color:#708499;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em">Tugash sanasi</div>
+                    <div style="margin-top:6px;font-size:1.25rem;font-weight:700;color:#f5f5f5">
+                        {% if subscription.expires_at %}{{ subscription.expires_at|date:"d.m.Y" }}{% else %}-{% endif %}
+                    </div>
+                    {% if subscription.expires_at %}
+                    <div style="color:#708499;font-size:.82rem;margin-top:4px">{{ subscription.expires_at|date:"H:i" }}</div>
+                    {% endif %}
+                </div>
+
+                <div style="background:#1c2631;border:1px solid #2b3a4a;border-radius:12px;padding:16px">
+                    <div style="color:#708499;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em">Qolgan vaqt</div>
+                    <div style="margin-top:6px;font-size:1.25rem;font-weight:700;color:#f5f5f5">
+                        {% if subscription_is_active %}{{ subscription_days_left }} kun{% else %}-{% endif %}
+                    </div>
+                </div>
+
+                {% if chat.invite_link %}
+                <a href="{{ chat.invite_link }}" target="_blank" class="tg-btn tg-btn-ghost mt-3" style="width:100%;text-align:center">
+                    <i class="bi bi-box-arrow-up-right me-1"></i>Invite link
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="tg-card mb-4">
+            <div class="tg-card-header">
+                <div class="title"><i class="bi bi-calendar-check" style="color:#4dbe68"></i> Muddat belgilash</div>
+            </div>
+            <div style="padding:20px">
+                <form method="post" class="row g-3 align-items-end">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="set_date">
+                    <div class="col-md-7">
+                        <label style="display:block;color:#708499;font-size:.82rem;margin-bottom:6px">Obuna qaysi sanagacha</label>
+                        <input type="date" name="expires_at" value="{{ expires_date_value }}" class="tg-search" required>
+                    </div>
+                    <div class="col-md-5">
+                        <button type="submit" class="tg-btn" style="width:100%">
+                            <i class="bi bi-check2-circle me-1"></i>Saqlash
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="tg-card mb-4">
+            <div class="tg-card-header">
+                <div class="title"><i class="bi bi-plus-circle" style="color:#71bafa"></i> Obuna davri qo'shish</div>
+            </div>
+            <div style="padding:20px">
+                <form method="post" class="row g-3 align-items-end">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_days">
+                    <div class="col-md-7">
+                        <label style="display:block;color:#708499;font-size:.82rem;margin-bottom:6px">Kunlar soni</label>
+                        <input type="number" name="days" min="1" value="30" class="tg-search" required>
+                    </div>
+                    <div class="col-md-5">
+                        <button type="submit" class="tg-btn" style="width:100%">
+                            <i class="bi bi-plus-lg me-1"></i>Kun qo'shish
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="tg-card">
+            <div class="tg-card-header">
+                <div class="title"><i class="bi bi-x-circle" style="color:#f44336"></i> Obunani bekor qilish</div>
+            </div>
+            <div style="padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+                <div style="color:#adb5bd;font-size:.9rem">Bekor qilinganda chat uchun aktiv obuna muddati olib tashlanadi.</div>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="cancel">
+                    <button type="submit" class="tg-btn tg-btn-ghost" style="color:#f44336;border-color:#6a2020">
+                        <i class="bi bi-slash-circle me-1"></i>Bekor qilish
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

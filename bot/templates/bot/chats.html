@@ -26,7 +26,7 @@
 <div class="tg-card">
     <div class="tg-table-wrap"><table class="tg-table">
         <thead>
-            <tr><th>Chat</th><th>Chat ID</th><th>Tur</th><th>Invite link</th><th>Qo'shilgan</th></tr>
+            <tr><th>Chat</th><th>Chat ID</th><th>Tur</th><th>Obuna</th><th>Invite link</th><th>Qo'shilgan</th><th></th></tr>
         </thead>
         <tbody>
             {% for chat in chats %}
@@ -36,7 +36,7 @@
                         <div class="user-avatar" style="background:linear-gradient(135deg,#1a3d6b,#5288c1);border-radius:10px">
                             <i class="bi bi-people" style="font-size:1rem"></i>
                         </div>
-                        <span style="font-weight:600;color:#f5f5f5">{{ chat.title }}</span>
+                        <a href="{% url 'chat_detail' chat.id %}" style="font-weight:600;color:#f5f5f5">{{ chat.title }}</a>
                     </div>
                 </td>
                 <td><code>{{ chat.chat_id }}</code></td>
@@ -45,6 +45,21 @@
                     <span style="background:#162a3d;color:#71bafa;padding:3px 10px;border-radius:20px;font-size:0.8rem;font-weight:600">Supergroup</span>
                     {% else %}
                     <span style="background:#1a2d1a;color:#4dbe68;padding:3px 10px;border-radius:20px;font-size:0.8rem;font-weight:600">Guruh</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if chat.subscription_expires_at and chat.subscription_expires_at > now %}
+                    <div style="display:flex;flex-direction:column;gap:2px">
+                        <span style="background:#1a3d2a;color:#4dbe68;padding:3px 10px;border-radius:20px;font-size:0.8rem;font-weight:600;width:max-content">Faol</span>
+                        <span style="color:#708499;font-size:0.78rem">{{ chat.subscription_expires_at|date:"d.m.Y" }} gacha</span>
+                    </div>
+                    {% elif chat.subscription_expires_at %}
+                    <div style="display:flex;flex-direction:column;gap:2px">
+                        <span style="background:#3d2a0f;color:#f5a623;padding:3px 10px;border-radius:20px;font-size:0.8rem;font-weight:600;width:max-content">Tugagan</span>
+                        <span style="color:#708499;font-size:0.78rem">{{ chat.subscription_expires_at|date:"d.m.Y" }}</span>
+                    </div>
+                    {% else %}
+                    <span style="color:#708499;font-size:0.82rem">Yo'q</span>
                     {% endif %}
                 </td>
                 <td>
@@ -57,9 +72,14 @@
                     {% endif %}
                 </td>
                 <td style="color:#708499;font-size:0.82rem">{{ chat.created_at|date:"d.m.Y H:i" }}</td>
+                <td style="white-space:nowrap">
+                    <a href="{% url 'chat_detail' chat.id %}" class="tg-btn tg-btn-sm">
+                        <i class="bi bi-sliders me-1"></i>Boshqarish
+                    </a>
+                </td>
             </tr>
             {% empty %}
-            <tr><td colspan="5" style="text-align:center;color:#708499;padding:32px">Chat topilmadi</td></tr>
+            <tr><td colspan="7" style="text-align:center;color:#708499;padding:32px">Chat topilmadi</td></tr>
             {% endfor %}
         </tbody>
     </table></div>
